@@ -1,0 +1,19 @@
+# Xcode
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Local tooling
+.DS_Store
+
+# Local sample documents kept next to the project for manual testing
+/*.pdf
+/*.epub
+/*.docx
+/*.doc
+/*.txt
