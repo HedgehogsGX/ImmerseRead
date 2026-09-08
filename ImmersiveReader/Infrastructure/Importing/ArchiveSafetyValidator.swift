@@ -93,7 +93,7 @@ struct ArchiveSafetyValidator: Sendable {
             requiredPaths = ["META-INF/container.xml"]
         case .docx:
             requiredPaths = ["[Content_Types].xml", "word/document.xml"]
-        case .pdf, .txt, .md, .markdown, .doc:
+        case .pdf, .plainText, .markdown, .legacyWord:
             requiredPaths = []
         }
 

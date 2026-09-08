@@ -65,9 +65,12 @@ struct LibraryReaderDestination: View {
             try modelContext.save()
             let fileURL = try await importService.storedFileURL(for: book.storedRelativePath)
 
-            guard let document = ReaderDocument(id: book.id, title: book.title, fileURL: fileURL) else {
-                throw LibraryReaderDestinationError.unsupportedFormat
-            }
+            let document = ReaderDocument(
+                id: book.id,
+                title: book.title,
+                fileURL: fileURL,
+                format: book.format
+            )
 
             guard !Task.isCancelled else {
                 return
@@ -99,17 +102,6 @@ struct LibraryReaderDestination: View {
             } catch {
                 isProgressSaveAlertPresented = true
             }
-        }
-    }
-}
-
-private enum LibraryReaderDestinationError: LocalizedError {
-    case unsupportedFormat
-
-    var errorDescription: String? {
-        switch self {
-        case .unsupportedFormat:
-            "暂不支持这种文档格式。"
         }
     }
 }

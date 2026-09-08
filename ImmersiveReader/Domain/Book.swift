@@ -21,7 +21,7 @@ final class Book {
         get {
             guard let format = BookFormat(rawValue: formatRawValue) else {
                 assertionFailure("Unknown persisted book format: \(formatRawValue)")
-                return .txt
+                return .plainText
             }
             return format
         }

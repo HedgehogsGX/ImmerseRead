@@ -28,7 +28,7 @@ struct BookImportServiceTests {
         #expect(result.id == identifier)
         #expect(result.title == "..\\escape")
         #expect(result.originalFilename == "..\\escape.MD")
-        #expect(result.format == .md)
+        #expect(result.format == .markdown)
         #expect(result.textEncoding == .utf8)
         #expect(result.storedRelativePath == "\(identifier.uuidString)/original.md")
         #expect(result.contentHash == "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824")

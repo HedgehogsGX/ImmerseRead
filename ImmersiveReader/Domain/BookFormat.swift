@@ -1,45 +1,102 @@
 import Foundation
+import UniformTypeIdentifiers
 
+/// The single description of every document format the app accepts.
+///
+/// Raw values are persisted by SwiftData, so they never change. Everything
+/// else the app knows about a format (accepted extensions, labels, which
+/// reader features apply) is derived from here.
 enum BookFormat: String, CaseIterable, Codable, Hashable, Sendable {
     case epub
     case pdf
-    case txt
-    case md
-    case markdown
+    case plainText = "txt"
+    case markdown = "md"
     case docx
-    case doc
+    case legacyWord = "doc"
+
+    /// Accepts persisted raw values as well as any accepted file extension.
+    /// Earlier releases stored `markdown` for `.markdown` files.
+    init?(rawValue: String) {
+        self.init(fileExtension: rawValue)
+    }
 
     init?(fileExtension: String) {
         let normalizedExtension = fileExtension
+            .trimmingCharacters(in: .whitespacesAndNewlines)
             .trimmingCharacters(in: CharacterSet(charactersIn: "."))
             .lowercased()
 
-        self.init(rawValue: normalizedExtension)
+        guard let format = Self.allCases.first(where: {
+            $0.fileExtensions.contains(normalizedExtension)
+        }) else {
+            return nil
+        }
+        self = format
+    }
+
+    /// Accepted file extensions, canonical first.
+    var fileExtensions: [String] {
+        switch self {
+        case .epub:
+            ["epub"]
+        case .pdf:
+            ["pdf"]
+        case .plainText:
+            ["txt", "text"]
+        case .markdown:
+            ["md", "markdown", "mdown", "mkd"]
+        case .docx:
+            ["docx"]
+        case .legacyWord:
+            ["doc"]
+        }
     }
 
     var preferredFileExtension: String {
+        fileExtensions[0]
+    }
+
+    static var importContentTypes: [UTType] {
+        allCases.flatMap(\.fileExtensions).compactMap { UTType(filenameExtension: $0) }
+    }
+
+    var displayName: String {
         switch self {
+        case .epub:
+            "EPUB"
+        case .pdf:
+            "PDF"
+        case .plainText:
+            "TXT"
         case .markdown:
-            "markdown"
-        default:
-            rawValue
+            "Markdown"
+        case .docx:
+            "DOCX"
+        case .legacyWord:
+            "DOC"
         }
     }
 
-    var isReflowable: Bool {
-        switch self {
-        case .epub, .txt, .md, .markdown, .docx:
-            true
-        case .pdf, .doc:
-            false
-        }
+    /// Compact badge for the library shelf.
+    var shortLabel: String {
+        self == .markdown ? "MD" : displayName
     }
 
     var isPlainText: Bool {
         switch self {
-        case .txt, .md, .markdown:
+        case .plainText, .markdown:
             true
-        case .epub, .pdf, .docx, .doc:
+        case .epub, .pdf, .docx, .legacyWord:
+            false
+        }
+    }
+
+    /// Whether the reader can change font size and line height for this format.
+    var supportsTypography: Bool {
+        switch self {
+        case .plainText, .markdown, .epub, .docx, .pdf:
+            true
+        case .legacyWord:
             false
         }
     }

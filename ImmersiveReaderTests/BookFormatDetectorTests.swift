@@ -9,11 +9,11 @@ struct BookFormatDetectorTests {
     func recognizesSupportedExtensionsCaseInsensitively() {
         #expect(BookFormat(fileExtension: "EPUB") == .epub)
         #expect(BookFormat(fileExtension: ".Pdf") == .pdf)
-        #expect(BookFormat(fileExtension: "txt") == .txt)
-        #expect(BookFormat(fileExtension: "MD") == .md)
+        #expect(BookFormat(fileExtension: "txt") == .plainText)
+        #expect(BookFormat(fileExtension: "MD") == .markdown)
         #expect(BookFormat(fileExtension: "markdown") == .markdown)
         #expect(BookFormat(fileExtension: "docx") == .docx)
-        #expect(BookFormat(fileExtension: "doc") == .doc)
+        #expect(BookFormat(fileExtension: "doc") == .legacyWord)
         #expect(BookFormat(fileExtension: "rtf") == nil)
     }
 
@@ -29,7 +29,7 @@ struct BookFormatDetectorTests {
             (
                 "legacy.doc",
                 Data([0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1]),
-                .doc
+                .legacyWord
             ),
         ]
 

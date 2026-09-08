@@ -5,15 +5,31 @@ import UIKit
 
 struct ReaderCoreTests {
     @Test
-    func mapsImportedExtensionsToReaderFormats() {
-        #expect(ReaderFormat(fileExtension: "EPUB") == .epub)
-        #expect(ReaderFormat(fileExtension: ".pdf") == .pdf)
-        #expect(ReaderFormat(fileExtension: "txt") == .plainText)
-        #expect(ReaderFormat(fileExtension: "md") == .markdown)
-        #expect(ReaderFormat(fileExtension: "MARKDOWN") == .markdown)
-        #expect(ReaderFormat(fileExtension: "docx") == .docx)
-        #expect(ReaderFormat(fileExtension: "doc") == .legacyWord)
-        #expect(ReaderFormat(fileExtension: "rtf") == nil)
+    func mapsFileExtensionsToFormats() {
+        #expect(BookFormat(fileExtension: "EPUB") == .epub)
+        #expect(BookFormat(fileExtension: ".pdf") == .pdf)
+        #expect(BookFormat(fileExtension: "txt") == .plainText)
+        #expect(BookFormat(fileExtension: "text") == .plainText)
+        #expect(BookFormat(fileExtension: "md") == .markdown)
+        #expect(BookFormat(fileExtension: "MARKDOWN") == .markdown)
+        #expect(BookFormat(fileExtension: "mkd") == .markdown)
+        #expect(BookFormat(fileExtension: "docx") == .docx)
+        #expect(BookFormat(fileExtension: "doc") == .legacyWord)
+        #expect(BookFormat(fileExtension: "rtf") == nil)
+    }
+
+    @Test
+    func persistedRawValuesStayStableAndAcceptLegacyMarkdown() {
+        for format in BookFormat.allCases {
+            #expect(BookFormat(rawValue: format.rawValue) == format)
+            #expect(format.fileExtensions.first == format.preferredFileExtension)
+        }
+        #expect(BookFormat.plainText.rawValue == "txt")
+        #expect(BookFormat.markdown.rawValue == "md")
+        #expect(BookFormat.legacyWord.rawValue == "doc")
+        #expect(BookFormat(rawValue: "markdown") == .markdown)
+        #expect(BookFormat(rawValue: "rtf") == nil)
+        #expect(BookFormat.importContentTypes.count == BookFormat.allCases.flatMap(\.fileExtensions).count)
     }
 
     @Test
@@ -85,7 +101,7 @@ struct ReaderCoreTests {
     }
 
     @Test
-    func textLoaderRejectsNonTextReaderFormats() async {
+    func textLoaderRejectsNonTextFormats() async {
         let document = ReaderDocument(
             id: UUID(),
             title: "PDF",
@@ -137,8 +153,8 @@ struct ReaderCoreTests {
 
     @Test
     func PDFSupportsTextTypographyAndFontButtonsRespectBounds() {
-        #expect(ReaderFormat.pdf.supportsTypography)
-        #expect(!ReaderFormat.legacyWord.supportsTypography)
+        #expect(BookFormat.pdf.supportsTypography)
+        #expect(!BookFormat.legacyWord.supportsTypography)
 
         var settings = ReaderDisplaySettings(fontSize: 19)
         settings.adjustFontSize(by: 1)

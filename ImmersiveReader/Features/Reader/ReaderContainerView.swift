@@ -47,7 +47,7 @@ struct ReaderContainerView: View {
         .navigationTitle(document.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if document.format.hasDisplaySettings {
+            if document.format.supportsTypography {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         presentedSheet = .settings
@@ -138,17 +138,6 @@ private extension ReaderContainerView {
         case settings
 
         var id: Self { self }
-    }
-}
-
-private extension ReaderFormat {
-    var hasDisplaySettings: Bool {
-        switch self {
-        case .epub, .pdf, .plainText, .markdown, .docx:
-            true
-        case .legacyWord:
-            false
-        }
     }
 }
 

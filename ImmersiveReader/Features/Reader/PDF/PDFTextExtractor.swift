@@ -195,7 +195,7 @@ struct PDFTextExtractor: PDFTextExtracting {
 }
 
 enum PDFTextExtractionError: LocalizedError, Equatable, Sendable {
-    case unsupportedFormat(ReaderFormat)
+    case unsupportedFormat(BookFormat)
     case notARegularFile
     case unreadableFile
     case invalidDocument

@@ -12,7 +12,7 @@ enum ReaderSemanticBlock: Hashable, Sendable {
 }
 
 enum ReaderSemanticParser {
-    static func parse(_ source: String, format: ReaderFormat) -> [ReaderSemanticBlock] {
+    static func parse(_ source: String, format: BookFormat) -> [ReaderSemanticBlock] {
         switch format {
         case .plainText:
             parsePlainText(source)

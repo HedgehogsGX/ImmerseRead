@@ -61,9 +61,9 @@ struct BookFormatDetector: Sendable {
             expectedSignature = Self.pdfSignature
         case .epub, .docx:
             expectedSignature = Self.zipSignature
-        case .doc:
+        case .legacyWord:
             expectedSignature = Self.compoundDocumentSignature
-        case .txt, .md, .markdown:
+        case .plainText, .markdown:
             preconditionFailure("Plain text formats are handled before signature validation")
         }
 

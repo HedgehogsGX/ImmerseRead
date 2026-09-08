@@ -201,8 +201,7 @@ actor BookImportService {
         guard pathComponents.count == 2,
               let bookID = UUID(uuidString: String(pathComponents[0])),
               storedFilenameURL.deletingPathExtension().lastPathComponent == "original",
-              let storedFormat = BookFormat(fileExtension: storedExtension),
-              storedFormat.preferredFileExtension == storedExtension
+              BookFormat(fileExtension: storedExtension) != nil
         else {
             throw BookImportError.unsafeStoredPath
         }

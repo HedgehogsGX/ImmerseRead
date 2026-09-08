@@ -13,7 +13,7 @@ protocol DOCXConverting {
 }
 
 enum DOCXConversionError: LocalizedError, Equatable {
-    case unsupportedFormat(ReaderFormat)
+    case unsupportedFormat(BookFormat)
     case notARegularFile
     case symbolicLinkNotSupported
     case fileUnavailable

@@ -1,7 +1,6 @@
 import Foundation
 import SwiftData
 import SwiftUI
-import UniformTypeIdentifiers
 
 @MainActor
 struct LibraryView: View {
@@ -46,7 +45,7 @@ struct LibraryView: View {
         .animation(.easeInOut(duration: 0.2), value: importProgress != nil)
         .fileImporter(
             isPresented: $isFileImporterPresented,
-            allowedContentTypes: LibraryImportTypes.supported,
+            allowedContentTypes: BookFormat.importContentTypes,
             allowsMultipleSelection: true,
             onCompletion: handleFileImporterResult
         )
@@ -73,7 +72,7 @@ struct LibraryView: View {
                 LibraryBookPresentation(
                     id: book.id,
                     title: book.title,
-                    formatLabel: formatLabel(for: book.formatRawValue),
+                    formatLabel: book.format.shortLabel,
                     progress: book.readingProgress,
                     activityLabel: activityLabel(for: book),
                     storedRelativePath: book.storedRelativePath
@@ -225,15 +224,6 @@ struct LibraryView: View {
         }
     }
 
-    private func formatLabel(for rawValue: String) -> String {
-        switch rawValue.lowercased() {
-        case "md", "markdown":
-            "MD"
-        default:
-            rawValue.uppercased()
-        }
-    }
-
     private func activityLabel(for book: Book) -> String {
         let timestamp: String
 
@@ -269,18 +259,6 @@ private struct LibraryAlert: Identifiable {
     let id = UUID()
     let title: String
     let message: String
-}
-
-private enum LibraryImportTypes {
-    static let supported: [UTType] = [
-        "epub",
-        "pdf",
-        "txt",
-        "md",
-        "markdown",
-        "docx",
-        "doc"
-    ].compactMap { UTType(filenameExtension: $0) }
 }
 
 private extension Error {

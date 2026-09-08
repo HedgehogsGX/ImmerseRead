@@ -1,7 +1,7 @@
 import Foundation
 
 struct ReaderTextContent: Hashable, Sendable {
-    let format: ReaderFormat
+    let format: BookFormat
     let blocks: [ReaderSemanticBlock]
 }
 
@@ -74,7 +74,7 @@ struct LocalReaderTextLoader: ReaderTextLoading {
 }
 
 enum ReaderTextLoadingError: LocalizedError, Equatable {
-    case unsupportedFormat(ReaderFormat)
+    case unsupportedFormat(BookFormat)
     case notARegularFile
     case fileTooLarge(maximumBytes: Int)
     case unknownTextEncoding

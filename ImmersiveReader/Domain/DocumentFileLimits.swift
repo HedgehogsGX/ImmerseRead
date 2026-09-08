@@ -10,7 +10,7 @@ enum DocumentFileLimits {
 
     static func maximumImportBytes(for format: BookFormat) -> Int64 {
         switch format {
-        case .txt, .md, .markdown:
+        case .plainText, .markdown:
             plainTextMaximumBytes
         case .docx:
             docxMaximumBytes
@@ -18,7 +18,7 @@ enum DocumentFileLimits {
             epubMaximumBytes
         case .pdf:
             pdfMaximumBytes
-        case .doc:
+        case .legacyWord:
             legacyWordMaximumBytes
         }
     }
