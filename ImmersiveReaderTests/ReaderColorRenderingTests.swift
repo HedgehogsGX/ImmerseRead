@@ -57,8 +57,8 @@ struct ReaderColorRenderingTests {
             let paragraph = try #require(
                 rendered.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle
             )
-            #expect(font.pointSize == fontSize)
-            #expect(paragraph.lineHeightMultiple == lineHeight)
+            #expect(Double(font.pointSize) == fontSize)
+            #expect(Double(paragraph.lineHeightMultiple) == lineHeight)
             #expect(rendered.string == text + "\n")
             try expectColor(in: rendered, at: 0, equals: color)
         }

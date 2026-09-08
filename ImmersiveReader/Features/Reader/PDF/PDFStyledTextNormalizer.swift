@@ -181,7 +181,18 @@ enum PDFStyledTextNormalizer {
                     pendingSpaceColor = color
                 } else {
                     if pendingSpace {
-                        builder.append(" ", color: pendingSpaceColor)
+                        // PDFKit reports the glyph gap around fullwidth punctuation as a
+                        // space. Fullwidth punctuation carries its own spacing, so such a
+                        // gap is layout noise, unlike the deliberate space that separates a
+                        // speaker name from dialogue.
+                        let next = Character(scalar)
+                        let isPunctuationGap = builder.text.last.map { last in
+                            (isEastAsianPunctuation(last) && isEastAsianCharacter(next))
+                                || (isEastAsianCharacter(last) && isEastAsianPunctuation(next))
+                        } ?? false
+                        if !isPunctuationGap {
+                            builder.append(" ", color: pendingSpaceColor)
+                        }
                         pendingSpace = false
                     }
                     builder.append(String(scalar), color: color)
@@ -370,6 +381,18 @@ enum PDFStyledTextNormalizer {
            first.isLetter || first.isNumber { return false }
         if "([{“".contains(last) || ".,!?;:)]}%”".contains(first) { return false }
         return true
+    }
+
+    private static func isEastAsianPunctuation(_ character: Character) -> Bool {
+        character.unicodeScalars.contains { scalar in
+            switch scalar.value {
+            case 0x3000 ... 0x303F, 0xFE30 ... 0xFE4F, 0xFF01 ... 0xFF0F,
+                 0xFF1A ... 0xFF20, 0xFF3B ... 0xFF40, 0xFF5B ... 0xFF65:
+                true
+            default:
+                false
+            }
+        }
     }
 
     private static func isEastAsianCharacter(_ character: Character) -> Bool {
