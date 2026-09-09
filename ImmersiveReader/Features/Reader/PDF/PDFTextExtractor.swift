@@ -1,7 +1,7 @@
 import Foundation
 import PDFKit
 
-struct PDFReflowContent: Hashable, Sendable {
+struct PDFReflowContent: Hashable, Codable, Sendable {
     let textContent: ReaderTextContent
     let pageCount: Int
     /// One-based source page numbers. Callers must disclose these omissions.
@@ -14,6 +14,10 @@ protocol PDFTextExtracting: Sendable {
 
 /// Extracts text already present in a PDF; it does not perform OCR or infer column order.
 struct PDFTextExtractor: PDFTextExtracting {
+    /// Identifies the extraction output format for on-disk caches. Bump it whenever
+    /// the extractor or normalizer would produce different blocks for the same file.
+    static let extractionVersion = 1
+
     static let defaultMaximumFileSize = DocumentFileLimits.pdfMaximumBytes
     static let defaultMaximumExtractedUTF8Bytes = 8 * 1_024 * 1_024
     static let defaultMaximumPageCount = 5_000

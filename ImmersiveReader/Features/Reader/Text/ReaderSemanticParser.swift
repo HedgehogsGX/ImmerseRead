@@ -1,6 +1,6 @@
 import Foundation
 
-enum ReaderSemanticBlock: Hashable, Sendable {
+enum ReaderSemanticBlock: Hashable, Codable, Sendable {
     case heading(level: Int, text: String)
     case paragraph(String)
     case styledParagraph(ReaderStyledText)

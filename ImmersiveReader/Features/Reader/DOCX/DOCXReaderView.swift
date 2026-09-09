@@ -37,9 +37,27 @@ struct DOCXReaderView: View {
     }
 }
 
+/// Converts a DOCX once, then serves the resulting blocks from disk.
 struct DOCXReaderTextLoader: ReaderTextLoading {
+    static let cacheKey = ReaderContentCache.Key(
+        kind: "docx-text",
+        version: MammothDOCXConverter.conversionVersion
+    )
+
+    private let cache: ReaderContentCache
+
+    init(cache: ReaderContentCache = ReaderContentCache()) {
+        self.cache = cache
+    }
+
     func load(document: ReaderDocument) async throws -> ReaderTextContent {
+        if let cached = await cache.load(ReaderTextContent.self, key: Self.cacheKey, for: document) {
+            return cached
+        }
         let converter = await MammothDOCXConverter()
-        return try await converter.convert(document: document).readerContent
+        let content = try await converter.convert(document: document).readerContent
+        try Task.checkCancellation()
+        await cache.store(content, key: Self.cacheKey, for: document)
+        return content
     }
 }

@@ -3,6 +3,10 @@ import WebKit
 
 @MainActor
 final class MammothDOCXConverter: DOCXConverting {
+    /// Identifies the conversion output format for on-disk caches. Bump it whenever
+    /// Mammoth, the sanitizer or the block mapping would produce different blocks.
+    nonisolated static let conversionVersion = 1
+
     static let defaultMaximumFileSize = DocumentFileLimits.docxMaximumBytes
     static let defaultMaximumConvertedHTMLSize = 8 * 1_024 * 1_024
 

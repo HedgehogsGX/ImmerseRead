@@ -14,7 +14,7 @@ struct PDFDocumentReaderView: View {
         document: ReaderDocument,
         settings: Binding<ReaderDisplaySettings>,
         location: Binding<PDFReadingLocation>,
-        extractor: any PDFTextExtracting = PDFTextExtractor()
+        extractor: any PDFTextExtracting = CachingPDFTextExtractor()
     ) {
         self.document = document
         _settings = settings

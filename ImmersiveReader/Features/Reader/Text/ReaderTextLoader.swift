@@ -1,6 +1,6 @@
 import Foundation
 
-struct ReaderTextContent: Hashable, Sendable {
+struct ReaderTextContent: Hashable, Codable, Sendable {
     let format: BookFormat
     let blocks: [ReaderSemanticBlock]
 }

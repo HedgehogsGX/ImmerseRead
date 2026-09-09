@@ -1,7 +1,7 @@
 import Foundation
 
 /// A platform-independent sRGB color that can cross the extraction worker boundary.
-struct ReaderTextColor: Hashable, Sendable {
+struct ReaderTextColor: Hashable, Codable, Sendable {
     let red: Double
     let green: Double
     let blue: Double
@@ -26,7 +26,33 @@ struct ReaderTextStyleSpan: Hashable, Sendable {
     let color: ReaderTextColor
 }
 
-struct ReaderStyledText: Hashable, Sendable {
+extension ReaderTextStyleSpan: Codable {
+    private enum CodingKeys: String, CodingKey {
+        case location
+        case length
+        case color
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            range: NSRange(
+                location: try container.decode(Int.self, forKey: .location),
+                length: try container.decode(Int.self, forKey: .length)
+            ),
+            color: try container.decode(ReaderTextColor.self, forKey: .color)
+        )
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(range.location, forKey: .location)
+        try container.encode(range.length, forKey: .length)
+        try container.encode(color, forKey: .color)
+    }
+}
+
+struct ReaderStyledText: Hashable, Codable, Sendable {
     let text: String
     let styles: [ReaderTextStyleSpan]
 }
