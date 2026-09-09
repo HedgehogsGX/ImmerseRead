@@ -3,8 +3,9 @@ import SwiftUI
 struct EPUBReaderHostView: View {
     let document: ReaderDocument
     @Binding var settings: ReaderDisplaySettings
+    let initialLocation: EPUBReadingLocation?
     let initialProgress: Double
-    let onProgressChange: (Double) -> Void
+    let onLocationChange: (EPUBReadingLocation) -> Void
     let reader: any EPUBReader
 
     @State private var phase: LoadPhase = .idle
@@ -19,8 +20,7 @@ struct EPUBReaderHostView: View {
             case .ready:
                 reader.makeReaderView(
                     settings: $settings,
-                    initialProgress: initialProgress,
-                    onProgressChange: onProgressChange
+                    onLocationChange: onLocationChange
                 )
 
             case .failed(let message):
@@ -42,6 +42,7 @@ struct EPUBReaderHostView: View {
         do {
             try await reader.prepare(
                 document: document,
+                initialLocation: initialLocation,
                 initialProgress: initialProgress,
                 settings: settings
             )

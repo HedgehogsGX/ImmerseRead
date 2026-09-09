@@ -32,3 +32,25 @@ enum ReaderTextPosition {
         return min(lowerBound, pageRanges.count - 1)
     }
 }
+
+extension ReaderTextPosition {
+    /// Block ranges come from the renderer: contiguous, ordered, covering the whole string.
+    static func anchor(forCharacterOffset offset: Int, blockRanges: [NSRange]) -> ReaderTextAnchor {
+        guard let blockIndex = pageIndex(containingCharacterAt: offset, in: blockRanges) else {
+            return ReaderTextAnchor(blockIndex: 0, offsetInBlock: 0)
+        }
+        return ReaderTextAnchor(
+            blockIndex: blockIndex,
+            offsetInBlock: max(0, offset - blockRanges[blockIndex].location)
+        )
+    }
+
+    /// An anchor past the end of a shorter block lands at that block's end, and an
+    /// anchor past the last block lands on the last block, so a document edited
+    /// since the anchor was saved still reopens near the right place.
+    static func characterOffset(for anchor: ReaderTextAnchor, blockRanges: [NSRange]) -> Int {
+        guard !blockRanges.isEmpty else { return 0 }
+        let range = blockRanges[min(anchor.blockIndex, blockRanges.count - 1)]
+        return range.location + min(anchor.offsetInBlock, max(range.length - 1, 0))
+    }
+}

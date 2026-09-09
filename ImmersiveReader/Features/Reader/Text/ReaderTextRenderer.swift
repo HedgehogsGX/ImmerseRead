@@ -2,16 +2,26 @@ import Foundation
 import SwiftUI
 import UIKit
 
+/// Rendered text plus the range each semantic block occupies in it, so reading
+/// positions can be expressed as block anchors instead of rendered offsets.
+struct ReaderRenderedText {
+    let attributedString: NSAttributedString
+    let blockRanges: [NSRange]
+}
+
 enum ReaderTextRenderer {
     @MainActor
-    static func attributedString(
-        for content: ReaderTextContent,
+    static func render(
+        _ content: ReaderTextContent,
         settings: ReaderDisplaySettings
-    ) -> NSAttributedString {
+    ) -> ReaderRenderedText {
         let result = NSMutableAttributedString(string: "")
+        var blockRanges: [NSRange] = []
+        blockRanges.reserveCapacity(content.blocks.count)
         var sourceColors: [ReaderTextColor: UIColor] = [:]
 
         for block in content.blocks {
+            let blockStart = result.length
             append(
                 block,
                 usesMarkdownInlineFormatting: content.format == .markdown,
@@ -19,9 +29,21 @@ enum ReaderTextRenderer {
                 sourceColors: &sourceColors,
                 to: result
             )
+            blockRanges.append(NSRange(location: blockStart, length: result.length - blockStart))
         }
 
-        return result.copy() as? NSAttributedString ?? result
+        return ReaderRenderedText(
+            attributedString: result.copy() as? NSAttributedString ?? result,
+            blockRanges: blockRanges
+        )
+    }
+
+    @MainActor
+    static func attributedString(
+        for content: ReaderTextContent,
+        settings: ReaderDisplaySettings
+    ) -> NSAttributedString {
+        render(content, settings: settings).attributedString
     }
 
     @MainActor

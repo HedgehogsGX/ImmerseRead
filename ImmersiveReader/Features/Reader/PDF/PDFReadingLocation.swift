@@ -5,16 +5,24 @@ import Foundation
 struct PDFReadingLocation: Codable, Equatable, Sendable {
     var mode: PDFReadingMode
     private(set) var reflowProgress: Double
+    /// Block anchor for the reflowed text; `reflowProgress` is its coarse fallback.
+    private(set) var reflowAnchor: ReaderTextAnchor?
     private(set) var originalProgress: Double
 
     init(
         mode: PDFReadingMode = .reflow,
         reflowProgress: Double = 0,
+        reflowAnchor: ReaderTextAnchor? = nil,
         originalProgress: Double = 0
     ) {
         self.mode = mode
         self.reflowProgress = Self.normalized(reflowProgress)
+        self.reflowAnchor = reflowAnchor
         self.originalProgress = Self.normalized(originalProgress)
+    }
+
+    var reflowLocation: TextReadingLocation? {
+        reflowAnchor.map { TextReadingLocation(anchor: $0, progress: reflowProgress) }
     }
 
     /// Pre-reflow versions saved only an original-page fraction. Never reinterpret
@@ -46,9 +54,15 @@ struct PDFReadingLocation: Codable, Equatable, Sendable {
         switch mode {
         case .reflow:
             reflowProgress = Self.normalized(value)
+            reflowAnchor = nil
         case .original:
             originalProgress = Self.normalized(value)
         }
+    }
+
+    mutating func updateReflowLocation(_ location: TextReadingLocation) {
+        reflowProgress = Self.normalized(location.progress)
+        reflowAnchor = location.anchor
     }
 
     init(from decoder: any Decoder) throws {
@@ -64,6 +78,7 @@ struct PDFReadingLocation: Codable, Equatable, Sendable {
         self.init(
             mode: try container.decode(PDFReadingMode.self, forKey: .mode),
             reflowProgress: try container.decode(Double.self, forKey: .reflowProgress),
+            reflowAnchor: try container.decodeIfPresent(ReaderTextAnchor.self, forKey: .reflowAnchor),
             originalProgress: try container.decode(Double.self, forKey: .originalProgress)
         )
     }
@@ -73,6 +88,7 @@ struct PDFReadingLocation: Codable, Equatable, Sendable {
         try container.encode(Self.currentVersion, forKey: .version)
         try container.encode(mode, forKey: .mode)
         try container.encode(reflowProgress, forKey: .reflowProgress)
+        try container.encodeIfPresent(reflowAnchor, forKey: .reflowAnchor)
         try container.encode(originalProgress, forKey: .originalProgress)
     }
 
@@ -87,6 +103,7 @@ struct PDFReadingLocation: Codable, Equatable, Sendable {
         case version
         case mode
         case reflowProgress
+        case reflowAnchor
         case originalProgress
     }
 }

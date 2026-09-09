@@ -7,6 +7,8 @@ options:
   xcodeVersion: "26.0"
   createIntermediateGroups: true
   generateEmptyDirectories: true
+  # Synchronized folders: Xcode picks up added or removed files without regenerating the project.
+  defaultSourceDirectoryType: syncedFolder
 
 settings:
   base:

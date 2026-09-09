@@ -13,16 +13,18 @@ import UIKit
 /// error controller.
 @MainActor
 protocol EPUBReader: AnyObject {
+    /// `initialLocation` is the exact saved locator; `initialProgress` is the
+    /// coarse fallback for books saved before locators were persisted.
     func prepare(
         document: ReaderDocument,
+        initialLocation: EPUBReadingLocation?,
         initialProgress: Double,
         settings: ReaderDisplaySettings
     ) async throws
 
     func makeReaderView(
         settings: Binding<ReaderDisplaySettings>,
-        initialProgress: Double,
-        onProgressChange: @escaping (Double) -> Void
+        onLocationChange: @escaping (EPUBReadingLocation) -> Void
     ) -> AnyView
 }
 
@@ -33,6 +35,7 @@ final class ReadiumEPUBReader: EPUBReader {
 
     func prepare(
         document: ReaderDocument,
+        initialLocation: EPUBReadingLocation?,
         initialProgress: Double,
         settings: ReaderDisplaySettings
     ) async throws {
@@ -91,16 +94,21 @@ final class ReadiumEPUBReader: EPUBReader {
             throw EPUBReaderIntegrationError.emptyReadingOrder
         }
 
-        let progress = initialProgress.clampedToProgress
-        let initialLocation = await publication.locate(progression: progress)
-            ?? publication.approximateLocator(at: progress)
+        let initialLocator: Locator?
+        if let savedLocator = initialLocation.flatMap({ try? Locator(jsonString: $0.locatorJSON) }) {
+            initialLocator = savedLocator
+        } else {
+            let progress = initialProgress.clampedToProgress
+            initialLocator = await publication.locate(progression: progress)
+                ?? publication.approximateLocator(at: progress)
+        }
         try Task.checkCancellation()
 
         let navigator: EPUBNavigatorViewController
         do {
             navigator = try EPUBNavigatorViewController(
                 publication: publication,
-                initialLocation: initialLocation,
+                initialLocation: initialLocator,
                 config: .init(
                     preferences: EPUBPreferences(
                         displaySettings: settings,
@@ -123,8 +131,7 @@ final class ReadiumEPUBReader: EPUBReader {
 
     func makeReaderView(
         settings: Binding<ReaderDisplaySettings>,
-        initialProgress _: Double,
-        onProgressChange: @escaping (Double) -> Void
+        onLocationChange: @escaping (EPUBReadingLocation) -> Void
     ) -> AnyView {
         guard let session else {
             return AnyView(
@@ -140,7 +147,7 @@ final class ReadiumEPUBReader: EPUBReader {
             ReadiumEPUBNavigatorView(
                 navigator: session.navigator,
                 settings: settings.wrappedValue,
-                onProgressChange: onProgressChange
+                onLocationChange: onLocationChange
             )
             .id(session.documentID)
         )
@@ -165,10 +172,10 @@ private extension ReadiumEPUBReader {
 private struct ReadiumEPUBNavigatorView: UIViewControllerRepresentable {
     let navigator: EPUBNavigatorViewController
     let settings: ReaderDisplaySettings
-    let onProgressChange: (Double) -> Void
+    let onLocationChange: (EPUBReadingLocation) -> Void
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onProgressChange: onProgressChange)
+        Coordinator(onLocationChange: onLocationChange)
     }
 
     func makeUIViewController(context: Context) -> EPUBNavigatorViewController {
@@ -185,7 +192,7 @@ private struct ReadiumEPUBNavigatorView: UIViewControllerRepresentable {
         _ navigator: EPUBNavigatorViewController,
         context: Context
     ) {
-        context.coordinator.onProgressChange = onProgressChange
+        context.coordinator.onLocationChange = onLocationChange
         context.coordinator.update(
             settings: settings,
             interfaceStyle: context.environment.colorScheme.interfaceStyle,
@@ -202,14 +209,14 @@ private struct ReadiumEPUBNavigatorView: UIViewControllerRepresentable {
 
     @MainActor
     final class Coordinator: NSObject, EPUBNavigatorDelegate {
-        var onProgressChange: (Double) -> Void
+        var onLocationChange: (EPUBReadingLocation) -> Void
 
         private var appliedConfiguration: AppliedConfiguration?
         private var directionalNavigationAdapter: DirectionalNavigationAdapter?
-        private var lastReportedProgress: Double?
+        private var lastReportedLocation: EPUBReadingLocation?
 
-        init(onProgressChange: @escaping (Double) -> Void) {
-            self.onProgressChange = onProgressChange
+        init(onLocationChange: @escaping (EPUBReadingLocation) -> Void) {
+            self.onLocationChange = onLocationChange
         }
 
         func attach(to navigator: EPUBNavigatorViewController) {
@@ -251,15 +258,17 @@ private struct ReadiumEPUBNavigatorView: UIViewControllerRepresentable {
         }
 
         func navigator(_ navigator: Navigator, locationDidChange locator: Locator) {
-            guard let progress = locator.locations.totalProgression?.clampedToProgress else {
+            guard let progress = locator.locations.totalProgression?.clampedToProgress,
+                  let locatorJSON = try? locator.jsonString() else {
                 return
             }
-            guard progress != lastReportedProgress else {
+            let location = EPUBReadingLocation(locatorJSON: locatorJSON, progress: progress)
+            guard location != lastReportedLocation else {
                 return
             }
 
-            lastReportedProgress = progress
-            onProgressChange(progress)
+            lastReportedLocation = location
+            onLocationChange(location)
         }
 
         func navigator(_ navigator: Navigator, presentError error: NavigatorError) {

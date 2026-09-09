@@ -81,8 +81,9 @@ struct PDFDocumentReaderView: View {
                 ReaderTextLayoutView(
                     content: content.textContent,
                     settings: settings,
+                    initialLocation: location.reflowLocation,
                     initialProgress: location.reflowProgress,
-                    onProgressChange: reportReflowProgress
+                    onLocationChange: reportReflowLocation
                 )
 
                 Divider()
@@ -174,8 +175,8 @@ struct PDFDocumentReaderView: View {
     }
 
     @MainActor
-    private func reportReflowProgress(_ progress: Double) {
-        location.updateProgress(progress, for: .reflow)
+    private func reportReflowLocation(_ reflowLocation: TextReadingLocation) {
+        location.updateReflowLocation(reflowLocation)
     }
 
     @MainActor

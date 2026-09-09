@@ -3,22 +3,25 @@ import SwiftUI
 struct DOCXReaderView: View {
     let document: ReaderDocument
     let settings: ReaderDisplaySettings
+    let initialLocation: TextReadingLocation?
     let initialProgress: Double
-    let onProgressChange: (Double) -> Void
+    let onLocationChange: (TextReadingLocation) -> Void
 
     private let loader: any ReaderTextLoading
 
     init(
         document: ReaderDocument,
         settings: ReaderDisplaySettings,
+        initialLocation: TextReadingLocation? = nil,
         initialProgress: Double = 0,
-        onProgressChange: @escaping (Double) -> Void = { _ in },
+        onLocationChange: @escaping (TextReadingLocation) -> Void = { _ in },
         loader: any ReaderTextLoading = DOCXReaderTextLoader()
     ) {
         self.document = document
         self.settings = settings
+        self.initialLocation = initialLocation
         self.initialProgress = initialProgress.clampedToUnitInterval
-        self.onProgressChange = onProgressChange
+        self.onLocationChange = onLocationChange
         self.loader = loader
     }
 
@@ -26,8 +29,9 @@ struct DOCXReaderView: View {
         TextReaderView(
             document: document,
             settings: settings,
+            initialLocation: initialLocation,
             initialProgress: initialProgress,
-            onProgressChange: onProgressChange,
+            onLocationChange: onLocationChange,
             loader: loader
         )
     }

@@ -4,8 +4,9 @@ import UIKit
 struct TextReaderView: View {
     let document: ReaderDocument
     let settings: ReaderDisplaySettings
+    let initialLocation: TextReadingLocation?
     let initialProgress: Double
-    let onProgressChange: (Double) -> Void
+    let onLocationChange: (TextReadingLocation) -> Void
 
     private let loader: any ReaderTextLoading
     @State private var phase: LoadPhase = .idle
@@ -14,14 +15,16 @@ struct TextReaderView: View {
     init(
         document: ReaderDocument,
         settings: ReaderDisplaySettings,
+        initialLocation: TextReadingLocation? = nil,
         initialProgress: Double = 0,
-        onProgressChange: @escaping (Double) -> Void = { _ in },
+        onLocationChange: @escaping (TextReadingLocation) -> Void = { _ in },
         loader: any ReaderTextLoading = LocalReaderTextLoader()
     ) {
         self.document = document
         self.settings = settings
+        self.initialLocation = initialLocation
         self.initialProgress = initialProgress.clampedToUnitInterval
-        self.onProgressChange = onProgressChange
+        self.onLocationChange = onLocationChange
         self.loader = loader
     }
 
@@ -35,8 +38,9 @@ struct TextReaderView: View {
                 ReaderTextLayoutView(
                     content: content,
                     settings: settings,
+                    initialLocation: initialLocation,
                     initialProgress: initialProgress,
-                    onProgressChange: onProgressChange
+                    onLocationChange: onLocationChange
                 )
 
             case .failed(let message):
@@ -84,12 +88,14 @@ private extension TextReaderView {
 struct ReaderTextLayoutView: View {
     let content: ReaderTextContent
     let settings: ReaderDisplaySettings
+    let initialLocation: TextReadingLocation?
     let initialProgress: Double
-    let onProgressChange: (Double) -> Void
+    let onLocationChange: (TextReadingLocation) -> Void
 
     @State private var phase: LayoutPhase = .loading
     @State private var pageIndex = 0
     @State private var currentProgress: Double
+    @State private var pendingAnchor: ReaderTextAnchor?
     @State private var currentCharacterOffset: Int?
     @State private var activeRenderID: UUID?
     @State private var retryID = UUID()
@@ -97,14 +103,19 @@ struct ReaderTextLayoutView: View {
     init(
         content: ReaderTextContent,
         settings: ReaderDisplaySettings,
-        initialProgress: Double,
-        onProgressChange: @escaping (Double) -> Void
+        initialLocation: TextReadingLocation? = nil,
+        initialProgress: Double = 0,
+        onLocationChange: @escaping (TextReadingLocation) -> Void
     ) {
         self.content = content
         self.settings = settings
+        self.initialLocation = initialLocation
         self.initialProgress = initialProgress.clampedToUnitInterval
-        self.onProgressChange = onProgressChange
-        _currentProgress = State(initialValue: initialProgress.clampedToUnitInterval)
+        self.onLocationChange = onLocationChange
+        _currentProgress = State(
+            initialValue: (initialLocation?.progress ?? initialProgress).clampedToUnitInterval
+        )
+        _pendingAnchor = State(initialValue: initialLocation?.anchor)
     }
 
     var body: some View {
@@ -151,7 +162,8 @@ struct ReaderTextLayoutView: View {
         .onChange(of: content) { _, _ in
             activeRenderID = nil
             currentCharacterOffset = nil
-            currentProgress = initialProgress
+            pendingAnchor = initialLocation?.anchor
+            currentProgress = initialLocation?.progress ?? initialProgress
             phase = .loading
             retryID = UUID()
         }
@@ -222,10 +234,8 @@ struct ReaderTextLayoutView: View {
             }
             try Task.checkCancellation()
 
-            let attributedText = ReaderTextRenderer.attributedString(
-                for: content,
-                settings: request.settings
-            )
+            let rendered = ReaderTextRenderer.render(content, settings: request.settings)
+            let attributedText = rendered.attributedString
             let pageRanges: [NSRange]
             if request.settings.layoutMode == .paged {
                 if let previousLayout,
@@ -245,25 +255,40 @@ struct ReaderTextLayoutView: View {
             try Task.checkCancellation()
             guard activeRenderID == renderID else { return }
 
-            let savedOffset = currentCharacterOffset ?? ReaderTextPosition.characterOffset(
-                for: currentProgress,
-                textLength: attributedText.length
-            )
-            let anchor = min(max(savedOffset, 0), max(attributedText.length - 1, 0))
+            // Within a session the rendered offset is exact. A saved anchor survives
+            // renderer changes; the shelf fraction is the last resort for books saved
+            // before anchors existed.
+            let savedOffset: Int
+            if let currentCharacterOffset {
+                savedOffset = currentCharacterOffset
+            } else if let pendingAnchor {
+                savedOffset = ReaderTextPosition.characterOffset(
+                    for: pendingAnchor,
+                    blockRanges: rendered.blockRanges
+                )
+            } else {
+                savedOffset = ReaderTextPosition.characterOffset(
+                    for: currentProgress,
+                    textLength: attributedText.length
+                )
+            }
+            let offset = min(max(savedOffset, 0), max(attributedText.length - 1, 0))
             let restoredPage = ReaderTextPosition.pageIndex(
-                containingCharacterAt: anchor,
+                containingCharacterAt: offset,
                 in: pageRanges
             ) ?? 0
 
             var transaction = Transaction()
             transaction.disablesAnimations = true
             withTransaction(transaction) {
-                currentCharacterOffset = anchor
+                currentCharacterOffset = offset
+                pendingAnchor = nil
                 pageIndex = restoredPage
                 phase = .ready(.init(
                     id: renderID,
                     request: request,
                     fullText: attributedText,
+                    blockRanges: rendered.blockRanges,
                     pageRanges: pageRanges
                 ))
             }
@@ -293,15 +318,22 @@ struct ReaderTextLayoutView: View {
     @MainActor
     private func reportPosition(_ offset: Int, in layout: Layout) {
         guard case .ready(let visibleLayout) = phase, visibleLayout.id == layout.id else { return }
-        currentCharacterOffset = min(max(offset, 0), max(layout.fullText.length - 1, 0))
+        let clampedOffset = min(max(offset, 0), max(layout.fullText.length - 1, 0))
+        currentCharacterOffset = clampedOffset
         // Persist the visible text location even on the final page. Forcing 100%
         // there would discard its anchor and reopen at a different passage after reflow.
         let progress = ReaderTextPosition.progress(
-            forCharacterOffset: offset,
+            forCharacterOffset: clampedOffset,
             textLength: layout.fullText.length
         )
         currentProgress = progress
-        onProgressChange(progress)
+        onLocationChange(TextReadingLocation(
+            anchor: ReaderTextPosition.anchor(
+                forCharacterOffset: clampedOffset,
+                blockRanges: layout.blockRanges
+            ),
+            progress: progress
+        ))
     }
 
     private static let contentInsets = UIEdgeInsets(top: 28, left: 24, bottom: 46, right: 24)
@@ -318,6 +350,7 @@ private extension ReaderTextLayoutView {
         let id: UUID
         let request: LayoutRequest
         let fullText: NSAttributedString
+        let blockRanges: [NSRange]
         let pageRanges: [NSRange]
     }
 
