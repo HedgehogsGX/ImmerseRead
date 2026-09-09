@@ -3,8 +3,10 @@ import SwiftUI
 struct ReaderContainerView: View {
     let document: ReaderDocument
     let initialProgress: Double
-    let onProgressChange: (Double) -> Void
-    let onLocationChange: ((Double, Data) -> Void)?
+    let initialTextLocation: TextReadingLocation?
+    let initialEPUBLocation: EPUBReadingLocation?
+    /// Receives the shelf progress and the format-specific location to persist.
+    let onLocationChange: (Double, Data?) -> Void
 
     @State private var epubReader: any EPUBReader
     @State private var settings: ReaderDisplaySettings
@@ -14,20 +16,26 @@ struct ReaderContainerView: View {
     init(
         document: ReaderDocument,
         initialProgress: Double = 0,
-        onProgressChange: @escaping (Double) -> Void = { _ in },
         initialLocationData: Data? = nil,
-        onLocationChange: ((Double, Data) -> Void)? = nil,
+        onLocationChange: @escaping (Double, Data?) -> Void = { _, _ in },
         initialSettings: ReaderDisplaySettings? = nil,
         epubReader: (any EPUBReader)? = nil
     ) {
         self.document = document
-        self.initialProgress = min(max(initialProgress, 0), 1)
-        self.onProgressChange = { progress in
-            onProgressChange(min(max(progress, 0), 1))
+        self.initialProgress = initialProgress.clampedToUnitInterval
+        self.onLocationChange = { progress, data in
+            onLocationChange(progress.clampedToUnitInterval, data)
         }
-        self.onLocationChange = onLocationChange
+        // Each format owns its location encoding; decoding another format's
+        // payload fails and falls back to the coarse progress fraction.
+        initialTextLocation = document.format == .pdf || document.format == .epub
+            ? nil
+            : TextReadingLocation.restore(from: initialLocationData)
+        initialEPUBLocation = document.format == .epub
+            ? EPUBReadingLocation.restore(from: initialLocationData)
+            : nil
         _pdfLocation = State(initialValue: PDFReadingLocation.restore(
-            from: initialLocationData,
+            from: document.format == .pdf ? initialLocationData : nil,
             legacyOriginalProgress: initialProgress
         ))
         _epubReader = State(initialValue: epubReader ?? ReadiumEPUBReader())
@@ -82,12 +90,7 @@ struct ReaderContainerView: View {
         }
         .onChange(of: pdfLocation) { _, newLocation in
             guard document.format == .pdf else { return }
-            let progress = newLocation.progress(for: newLocation.mode)
-            if let onLocationChange, let data = newLocation.encoded() {
-                onLocationChange(progress, data)
-            } else {
-                onProgressChange(progress)
-            }
+            onLocationChange(newLocation.progress(for: newLocation.mode), newLocation.encoded())
         }
     }
 
@@ -98,8 +101,9 @@ struct ReaderContainerView: View {
             TextReaderView(
                 document: document,
                 settings: settings,
+                initialLocation: initialTextLocation,
                 initialProgress: initialProgress,
-                onProgressChange: onProgressChange
+                onLocationChange: reportTextLocation
             )
 
         case .pdf:
@@ -114,8 +118,11 @@ struct ReaderContainerView: View {
             EPUBReaderHostView(
                 document: document,
                 settings: $settings,
+                initialLocation: initialEPUBLocation,
                 initialProgress: initialProgress,
-                onProgressChange: onProgressChange,
+                onLocationChange: { location in
+                    onLocationChange(location.progress, location.encoded())
+                },
                 reader: epubReader
             )
 
@@ -123,13 +130,18 @@ struct ReaderContainerView: View {
             DOCXReaderView(
                 document: document,
                 settings: settings,
+                initialLocation: initialTextLocation,
                 initialProgress: initialProgress,
-                onProgressChange: onProgressChange
+                onLocationChange: reportTextLocation
             )
 
         case .legacyWord:
             LegacyDocumentPreviewView(document: document)
         }
+    }
+
+    private func reportTextLocation(_ location: TextReadingLocation) {
+        onLocationChange(location.progress, location.encoded())
     }
 }
 

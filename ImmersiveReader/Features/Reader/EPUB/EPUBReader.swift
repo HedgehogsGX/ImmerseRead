@@ -33,6 +33,11 @@ protocol EPUBReader: AnyObject {
 final class ReadiumEPUBReader: EPUBReader {
     private var session: Session?
 
+    /// The navigator's current locator as JSON; the saved initial locator until the reader has laid out.
+    var currentLocationJSON: String? {
+        try? session?.navigator.currentLocation?.jsonString()
+    }
+
     func prepare(
         document: ReaderDocument,
         initialLocation: EPUBReadingLocation?,

@@ -24,7 +24,6 @@ struct LibraryReaderDestination: View {
                 ReaderContainerView(
                     document: document,
                     initialProgress: book.readingProgress,
-                    onProgressChange: saveProgress,
                     initialLocationData: book.readingLocationData,
                     onLocationChange: saveLocation
                 )
@@ -84,13 +83,9 @@ struct LibraryReaderDestination: View {
         }
     }
 
-    private func saveLocation(_ progress: Double, _ locationData: Data) {
-        book.readingLocationData = locationData
-        saveProgress(progress)
-    }
-
-    private func saveProgress(_ progress: Double) {
+    private func saveLocation(_ progress: Double, _ locationData: Data?) {
         book.readingProgress = progress.clampedToUnitInterval
+        book.readingLocationData = locationData
         progressSaveTask?.cancel()
         progressSaveTask = Task {
             try? await Task.sleep(for: .milliseconds(350))

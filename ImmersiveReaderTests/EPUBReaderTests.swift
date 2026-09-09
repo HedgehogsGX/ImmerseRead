@@ -26,15 +26,56 @@ struct EPUBReaderTests {
 
         try await reader.prepare(
             document: document,
+            initialLocation: nil,
             initialProgress: 0.5,
             settings: .default
         )
 
         _ = reader.makeReaderView(
             settings: .constant(.default),
-            initialProgress: 0.5,
-            onProgressChange: { _ in }
+            onLocationChange: { _ in }
         )
+    }
+
+    @Test @MainActor
+    func reopeningUsesTheSavedLocatorAndFallsBackForMalformedOnes() async throws {
+        let directoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("EPUBReaderTests-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(
+            at: directoryURL,
+            withIntermediateDirectories: true
+        )
+        defer { try? FileManager.default.removeItem(at: directoryURL) }
+
+        let fileURL = directoryURL.appendingPathComponent("minimal.epub")
+        try await makeMinimalEPUB(at: fileURL)
+        let document = ReaderDocument(
+            id: UUID(),
+            title: "最小 EPUB",
+            fileURL: fileURL,
+            format: .epub
+        )
+        let reader = ReadiumEPUBReader()
+
+        let savedLocator = #"{"href":"chapter.xhtml","type":"application/xhtml+xml","locations":{"progression":0.75,"totalProgression":0.75}}"#
+        try await reader.prepare(
+            document: document,
+            initialLocation: EPUBReadingLocation(locatorJSON: savedLocator, progress: 0.75),
+            initialProgress: 0,
+            settings: .default
+        )
+        let restored = try #require(reader.currentLocationJSON)
+        #expect(restored.contains(#""progression":0.75"#))
+        #expect(restored.contains("chapter.xhtml"))
+
+        try await reader.prepare(
+            document: document,
+            initialLocation: EPUBReadingLocation(locatorJSON: "not a locator", progress: 0.5),
+            initialProgress: 0.5,
+            settings: .default
+        )
+        let fallback = try #require(reader.currentLocationJSON)
+        #expect(fallback.contains(#""totalProgression":0.5"#))
     }
 
     private func makeMinimalEPUB(at fileURL: URL) async throws {
