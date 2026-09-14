@@ -42,7 +42,7 @@ struct ArchiveSafetyValidator: Sendable {
         }
         guard entries.count <= limits.maximumEntryCount else {
             throw BookImportError.unsafeArchive(
-                description: "压缩包包含过多文件（上限为 \(limits.maximumEntryCount) 个）。"
+                description: String(localized: "压缩包包含过多文件（上限为 \(limits.maximumEntryCount) 个）。")
             )
         }
 
@@ -58,14 +58,14 @@ struct ArchiveSafetyValidator: Sendable {
                 .lowercased()
             guard pathIdentities.insert(pathIdentity).inserted else {
                 throw BookImportError.unsafeArchive(
-                    description: "压缩包包含重复路径：\(entry.path)"
+                    description: String(localized: "压缩包包含重复路径：\(entry.path)")
                 )
             }
             normalizedPaths.insert(normalizedPath)
 
             guard entry.type != .symlink else {
                 throw BookImportError.unsafeArchive(
-                    description: "压缩包包含不支持的符号链接：\(entry.path)"
+                    description: String(localized: "压缩包包含不支持的符号链接：\(entry.path)")
                 )
             }
 
@@ -75,14 +75,14 @@ struct ArchiveSafetyValidator: Sendable {
                   newExpandedByteCount <= limits.maximumExpandedByteCount
             else {
                 throw BookImportError.unsafeArchive(
-                    description: "解压后的内容超过 \(limits.maximumExpandedByteCount) 字节上限。"
+                    description: String(localized: "解压后的内容超过 \(limits.maximumExpandedByteCount) 字节上限。")
                 )
             }
             expandedByteCount = newExpandedByteCount
 
             guard isCompressionRatioAllowed(for: entry) else {
                 throw BookImportError.unsafeArchive(
-                    description: "压缩条目膨胀比例异常：\(entry.path)"
+                    description: String(localized: "压缩条目膨胀比例异常：\(entry.path)")
                 )
             }
         }
@@ -129,7 +129,7 @@ struct ArchiveSafetyValidator: Sendable {
               !components.contains(where: { $0 == ".." || $0 == "." })
         else {
             throw BookImportError.unsafeArchive(
-                description: "压缩包包含不安全路径：\(rawPath)"
+                description: String(localized: "压缩包包含不安全路径：\(rawPath)")
             )
         }
 
@@ -174,13 +174,5 @@ struct ArchiveSafetyValidator: Sendable {
         guard await collector.value == expectedMimetype else {
             throw BookImportError.invalidArchive(expectedFormat: .epub)
         }
-    }
-}
-
-private actor ArchiveDataCollector {
-    private(set) var value = Data()
-
-    func append(_ chunk: Data) {
-        value.append(chunk)
     }
 }

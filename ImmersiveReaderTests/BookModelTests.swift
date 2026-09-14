@@ -10,10 +10,12 @@ struct BookModelTests {
         let result = BookImportResult(
             id: id,
             title: "示例",
+            author: "作者",
             originalFilename: "示例.markdown",
             format: .markdown,
             textEncoding: .utf8,
             storedRelativePath: "\(id.uuidString)/original.markdown",
+            coverRelativePath: "\(id.uuidString)/cover.jpg",
             contentHash: String(repeating: "a", count: 64),
             fileByteCount: 12,
             importedAt: date
@@ -21,6 +23,9 @@ struct BookModelTests {
 
         let book = Book(importResult: result)
         #expect(book.id == result.id)
+        #expect(book.title == result.title)
+        #expect(book.author == result.author)
+        #expect(book.coverRelativePath == result.coverRelativePath)
         #expect(book.format == .markdown)
         #expect(book.textEncoding == .utf8)
         #expect(book.readingProgress == 0)

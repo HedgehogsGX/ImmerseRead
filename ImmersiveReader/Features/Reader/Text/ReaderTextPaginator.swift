@@ -1,30 +1,65 @@
 import UIKit
 
 enum ReaderTextPaginator {
-    /// Uses TextKit's glyph layout so page boundaries track the actual font and line spacing.
-    /// Only character ranges are retained; page strings are materialized lazily by the UI.
     @MainActor
     static func pageRanges(
         from text: NSAttributedString,
         contentSize: CGSize
     ) async throws -> [NSRange] {
         try Task.checkCancellation()
-        guard text.length > 0 else {
-            return []
+        guard let session = Session(text: text, contentSize: contentSize) else {
+            return text.length > 0 ? [NSRange(location: 0, length: text.length)] : []
         }
-        guard contentSize.width >= 40, contentSize.height >= 40 else {
-            return [NSRange(location: 0, length: text.length)]
-        }
-
-        let storage = NSTextStorage(attributedString: text)
-        let layoutManager = NSLayoutManager()
-        storage.addLayoutManager(layoutManager)
 
         var pageRanges: [NSRange] = []
-        var laidOutCharacterCount = 0
+        while let range = try session.nextPage() {
+            pageRanges.append(range)
+            if pageRanges.count.isMultiple(of: 8) {
+                await Task.yield()
+                try Task.checkCancellation()
+            }
+        }
+        return pageRanges
+    }
 
-        while laidOutCharacterCount < text.length {
-            try Task.checkCancellation()
+    @MainActor
+    static func pageRangesNow(
+        from text: NSAttributedString,
+        contentSize: CGSize
+    ) throws -> [NSRange] {
+        guard let session = Session(text: text, contentSize: contentSize) else {
+            return text.length > 0 ? [NSRange(location: 0, length: text.length)] : []
+        }
+
+        var pageRanges: [NSRange] = []
+        while let range = try session.nextPage() {
+            pageRanges.append(range)
+        }
+        return pageRanges
+    }
+
+    @MainActor
+    private final class Session {
+        private let text: NSAttributedString
+        private let contentSize: CGSize
+        private let storage: NSTextStorage
+        private let layoutManager = NSLayoutManager()
+        private var laidOutCharacterCount = 0
+
+        init?(text: NSAttributedString, contentSize: CGSize) {
+            guard text.length > 0, contentSize.width >= 40, contentSize.height >= 40 else {
+                return nil
+            }
+            self.text = text
+            self.contentSize = contentSize
+            storage = NSTextStorage(attributedString: text)
+            storage.addLayoutManager(layoutManager)
+        }
+
+        func nextPage() throws -> NSRange? {
+            guard laidOutCharacterCount < text.length else {
+                return nil
+            }
 
             let container = NSTextContainer(size: contentSize)
             container.lineFragmentPadding = 0
@@ -44,29 +79,18 @@ enum ReaderTextPaginator {
             guard NSMaxRange(characterRange) > laidOutCharacterCount else {
                 throw PaginationError.unableToFitText
             }
-            // Keep exact character coverage even when a glyph represents several
-            // UTF-16 code units (emoji, ligatures or combining marks).
             let end = min(NSMaxRange(characterRange), text.length)
-            pageRanges.append(NSRange(
-                location: laidOutCharacterCount,
-                length: end - laidOutCharacterCount
-            ))
+            let range = NSRange(location: laidOutCharacterCount, length: end - laidOutCharacterCount)
             laidOutCharacterCount = end
-
-            if pageRanges.count.isMultiple(of: 8) {
-                await Task.yield()
-            }
+            return range
         }
-
-        try Task.checkCancellation()
-        return pageRanges
     }
 
     enum PaginationError: LocalizedError {
         case unableToFitText
 
         var errorDescription: String? {
-            "当前页面无法容纳正文，请尝试滚动阅读或减小字号。"
+            String(localized: "当前页面无法容纳正文，请尝试滚动阅读或减小字号。")
         }
     }
 }

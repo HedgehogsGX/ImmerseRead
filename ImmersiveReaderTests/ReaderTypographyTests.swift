@@ -5,6 +5,31 @@ import UIKit
 
 struct ReaderTypographyTests {
     @Test @MainActor
+    func selectedFontFamilyChangesNativeFontAndMarginsExposeContentInsets() throws {
+        let content = ReaderTextContent(format: .plainText, blocks: [.paragraph("Typography")])
+        let system = ReaderTextRenderer.attributedString(
+            for: content,
+            settings: ReaderDisplaySettings(fontFamily: .system, margin: 20)
+        )
+        let serif = ReaderTextRenderer.attributedString(
+            for: content,
+            settings: ReaderDisplaySettings(fontFamily: .serif, margin: 32)
+        )
+
+        let systemFont = try #require(system.attribute(.font, at: 0, effectiveRange: nil) as? UIFont)
+        let serifFont = try #require(serif.attribute(.font, at: 0, effectiveRange: nil) as? UIFont)
+
+        #expect(systemFont.familyName != serifFont.familyName)
+        let request = ReaderLayoutRequest(
+            settings: ReaderDisplaySettings(fontFamily: .serif, margin: 32),
+            availableSize: CGSize(width: 390, height: 700)
+        )
+        #expect(request.contentInsets.left == 32)
+        #expect(request.contentInsets.right == 32)
+        #expect(request.contentSize.width == 326)
+    }
+
+    @Test @MainActor
     func fontSettingChangesActualFontPointSizeAndParagraphSpacing() throws {
         let content = ReaderTextContent(format: .plainText, blocks: [.paragraph("可重排的正文")])
         let small = ReaderTextRenderer.attributedString(

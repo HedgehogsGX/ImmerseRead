@@ -3,12 +3,16 @@ import SwiftUI
 struct ReaderFontSizeControls: View {
     @Binding var settings: ReaderDisplaySettings
     var identifierPrefix = "reader.fontSize"
+    /// Off when something else already occupies the leading edge of the row.
+    var showsLabel = true
 
     var body: some View {
         HStack(spacing: 16) {
-            Text("字号")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            if showsLabel {
+                Text("字号")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
 
             Spacer(minLength: 8)
 

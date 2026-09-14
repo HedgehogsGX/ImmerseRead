@@ -91,6 +91,17 @@ enum BookFormat: String, CaseIterable, Codable, Hashable, Sendable {
         }
     }
 
+    /// Whether the file itself can carry a cover the app knows how to find:
+    /// a declared cover, an embedded picture, or a first page worth rendering.
+    var canCarryCover: Bool {
+        switch self {
+        case .epub, .pdf, .docx:
+            true
+        case .plainText, .markdown, .legacyWord:
+            false
+        }
+    }
+
     /// Whether the reader can change font size and line height for this format.
     var supportsTypography: Bool {
         switch self {

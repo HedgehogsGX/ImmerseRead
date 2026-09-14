@@ -1,9 +1,11 @@
+import PDFKit
 import SwiftUI
 
 struct PDFDocumentReaderView: View {
     let document: ReaderDocument
     @Binding var settings: ReaderDisplaySettings
     @Binding var location: PDFReadingLocation
+    let navigationModel: ReaderNavigationModel?
 
     private let extractor: any PDFTextExtracting
     @State private var phase: ExtractionPhase = .idle
@@ -14,18 +16,18 @@ struct PDFDocumentReaderView: View {
         document: ReaderDocument,
         settings: Binding<ReaderDisplaySettings>,
         location: Binding<PDFReadingLocation>,
+        navigationModel: ReaderNavigationModel? = nil,
         extractor: any PDFTextExtracting = CachingPDFTextExtractor()
     ) {
         self.document = document
         _settings = settings
         _location = location
+        self.navigationModel = navigationModel
         self.extractor = extractor
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            modeControl
-
             switch location.mode {
             case .reflow:
                 reflowSurface
@@ -35,41 +37,48 @@ struct PDFDocumentReaderView: View {
                     document: document,
                     settings: settings,
                     initialProgress: location.originalProgress,
-                    onProgressChange: reportOriginalProgress
+                    onProgressChange: reportOriginalProgress,
+                    navigationModel: navigationModel
                 )
             }
+
+            bottomBar
         }
         .task(id: ExtractionRequest(documentID: document.id, mode: location.mode, retryID: retryID)) {
             await extractTextIfNeeded()
         }
+        .task(id: document.id) {
+            installSearchProvider()
+        }
+        .onChange(of: navigationModel?.jumpRequest?.id) { _, _ in
+            applyNavigationJump()
+        }
     }
 
-    private var modeControl: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Picker("PDF 阅读模式", selection: $location.mode) {
-                ForEach(PDFReadingMode.allCases) { mode in
-                    Text(mode.title).tag(mode)
-                }
+    /// Reading choices only: how pages advance, and type size. Switching to the
+    /// document's original layout is a once-per-document decision and lives in
+    /// the reading settings sheet.
+    @ViewBuilder
+    private var bottomBar: some View {
+        switch location.mode {
+        case .reflow:
+            // While extracting or after a failure the surface owns the screen;
+            // the failure state offers its own way to the original.
+            if case .ready = phase {
+                ReaderBottomBar(settings: $settings)
             }
-            .pickerStyle(.segmented)
-            .accessibilityIdentifier("reader.pdf.mode")
 
-            Text(location.mode == .reflow
-                 ? "保留文字强调色，可直接调字号；图片和扫描内容不做 OCR，请查看原版。"
-                 : "保留 PDF 页面布局；要单独调整字号，请切换正文阅读。")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+        case .original:
+            // Type size cannot apply to rendered pages, but paging can.
+            ReaderBottomBar(settings: $settings, showsFontSize: false)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 10)
-        .background(settings.theme.backgroundColor)
     }
 
     @ViewBuilder
     private var reflowSurface: some View {
         switch phase {
         case .idle, .loading:
-            ReaderLoadingView(message: "正在提取 PDF 文字…")
+            ReaderLoadingView(message: String(localized: "正在提取 PDF 文字…"))
                 .accessibilityIdentifier("reader.pdf.extracting")
 
         case .ready(let content):
@@ -83,15 +92,9 @@ struct PDFDocumentReaderView: View {
                     settings: settings,
                     initialLocation: location.reflowLocation,
                     initialProgress: location.reflowProgress,
-                    onLocationChange: reportReflowLocation
+                    onLocationChange: reportReflowLocation,
+                    navigationModel: navigationModel
                 )
-
-                Divider()
-
-                ReaderFontSizeControls(settings: $settings)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 8)
-                    .background(.bar)
             }
             .accessibilityIdentifier("reader.pdf.reflow")
 
@@ -118,7 +121,7 @@ struct PDFDocumentReaderView: View {
 
     private func missingPagesNotice(_ pageNumbers: [Int]) -> some View {
         let visiblePages = pageNumbers.prefix(6).map(String.init).joined(separator: "、")
-        let suffix = pageNumbers.count > 6 ? "等 \(pageNumbers.count) 页" : "页"
+        let suffix = pageNumbers.count > 6 ? String(localized: "等 \(pageNumbers.count) 页") : String(localized: "页")
 
         return HStack(alignment: .top, spacing: 10) {
             Image(systemName: "exclamationmark.triangle")
@@ -144,9 +147,6 @@ struct PDFDocumentReaderView: View {
             extractedDocumentID = document.id
             phase = .idle
         }
-        guard location.mode == .reflow else {
-            return
-        }
         if case .ready = phase {
             return
         }
@@ -156,6 +156,7 @@ struct PDFDocumentReaderView: View {
             let content = try await extractor.extract(document: document)
             try Task.checkCancellation()
             phase = .ready(content)
+            navigationModel?.update(content: content.textContent)
         } catch is CancellationError {
             return
         } catch {
@@ -166,9 +167,9 @@ struct PDFDocumentReaderView: View {
             let title: String
             if let extractionError = error as? PDFTextExtractionError,
                case .noExtractableText = extractionError {
-                title = "这份 PDF 没有可提取的文字"
+                title = String(localized: "这份 PDF 没有可提取的文字")
             } else {
-                title = "暂时无法重排这份 PDF"
+                title = String(localized: "暂时无法重排这份 PDF")
             }
             phase = .failed(ExtractionFailure(title: title, message: error.localizedDescription))
         }
@@ -177,11 +178,41 @@ struct PDFDocumentReaderView: View {
     @MainActor
     private func reportReflowLocation(_ reflowLocation: TextReadingLocation) {
         location.updateReflowLocation(reflowLocation)
+        navigationModel?.report(location: .pdf(location))
     }
 
     @MainActor
     private func reportOriginalProgress(_ progress: Double) {
         location.updateProgress(progress, for: .original)
+        navigationModel?.report(location: .pdf(location))
+    }
+
+    @MainActor
+    private func installSearchProvider() {
+        guard let navigationModel else { return }
+        let url = document.fileURL
+        if let pdfDocument = PDFDocument(url: url) {
+            navigationModel.update(sections: PDFNavigationSupport.sections(for: pdfDocument))
+        }
+        navigationModel.setSearchProvider { query in
+            try await PDFNavigationSupport.search(query: query, fileURL: url)
+        }
+    }
+
+    @MainActor
+    private func applyNavigationJump() {
+        guard let request = navigationModel?.jumpRequest else { return }
+        switch request.location {
+        case .text(let textLocation):
+            location.mode = .reflow
+            location.updateReflowLocation(textLocation)
+        case .pdf(let pdfLocation):
+            location = pdfLocation
+        case .pdfPage:
+            location.mode = .original
+        case .epub:
+            return
+        }
     }
 }
 

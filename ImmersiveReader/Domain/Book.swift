@@ -10,6 +10,13 @@ final class Book {
     var formatRawValue: String
     var textEncodingRawValue: String?
     var storedRelativePath: String
+    var coverRelativePath: String?
+    /// `nil` means cover detection has never run for this book.
+    var coverSourceRawValue: String?
+    /// `nil` means the lettering cover follows the automatic palette.
+    var coverStyleRawValue: String?
+    /// Bumped whenever the cover file changes, so cached images are reloaded.
+    var coverUpdatedAt: Date?
     @Attribute(.unique) var contentHash: String
     var fileByteCount: Int64
     var importedAt: Date
@@ -39,6 +46,36 @@ final class Book {
         }
     }
 
+    var coverSource: BookCoverSource? {
+        get {
+            coverSourceRawValue.flatMap(BookCoverSource.init(rawValue:))
+        }
+        set {
+            coverSourceRawValue = newValue?.rawValue
+        }
+    }
+
+    /// The palette of the lettering cover, either the reader's pick or the
+    /// automatic one derived from the title.
+    var coverStyle: BookCoverStyle {
+        get {
+            coverStyleRawValue.flatMap(BookCoverStyle.init(rawValue:))
+                ?? BookCoverStyle.automatic(for: coverStyleSeed)
+        }
+        set {
+            coverStyleRawValue = newValue.rawValue
+        }
+    }
+
+    /// Whether the app has never looked inside this document for a cover.
+    var needsCoverDetection: Bool {
+        coverSourceRawValue == nil
+    }
+
+    private var coverStyleSeed: String {
+        "\(title)|\(author ?? "")"
+    }
+
     init(
         id: UUID,
         title: String,
@@ -47,6 +84,10 @@ final class Book {
         format: BookFormat,
         textEncoding: BookTextEncoding? = nil,
         storedRelativePath: String,
+        coverRelativePath: String? = nil,
+        coverSource: BookCoverSource? = nil,
+        coverStyle: BookCoverStyle? = nil,
+        coverUpdatedAt: Date? = nil,
         contentHash: String,
         fileByteCount: Int64,
         importedAt: Date,
@@ -61,6 +102,10 @@ final class Book {
         formatRawValue = format.rawValue
         textEncodingRawValue = textEncoding?.rawValue
         self.storedRelativePath = storedRelativePath
+        self.coverRelativePath = coverRelativePath
+        coverSourceRawValue = coverSource?.rawValue
+        coverStyleRawValue = coverStyle?.rawValue
+        self.coverUpdatedAt = coverUpdatedAt
         self.contentHash = contentHash
         self.fileByteCount = fileByteCount
         self.importedAt = importedAt
@@ -73,14 +118,31 @@ final class Book {
         self.init(
             id: importResult.id,
             title: importResult.title,
+            author: importResult.author,
             originalFilename: importResult.originalFilename,
             format: importResult.format,
             textEncoding: importResult.textEncoding,
             storedRelativePath: importResult.storedRelativePath,
+            coverRelativePath: importResult.coverRelativePath,
+            coverSource: importResult.coverSource,
+            coverUpdatedAt: importResult.coverRelativePath == nil
+                ? nil
+                : importResult.importedAt,
             contentHash: importResult.contentHash,
             fileByteCount: importResult.fileByteCount,
             importedAt: importResult.importedAt
         )
+    }
+
+    /// Records the outcome of a cover change, whether or not a file was written.
+    func applyCover(
+        relativePath: String?,
+        source: BookCoverSource,
+        updatedAt: Date = Date()
+    ) {
+        coverRelativePath = relativePath
+        coverSource = source
+        coverUpdatedAt = updatedAt
     }
 
     func updateReadingProgress(

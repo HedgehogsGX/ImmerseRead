@@ -10,12 +10,14 @@ import AppKit
 /// PDFKit objects and attributed strings remain confined to the extraction worker;
 /// only plain text, UTF-16 ranges, and RGBA values leave it.
 enum PDFStyledTextNormalizer {
-    static let defaultMaximumStyleRunCount = 100_000
+    /// Scales with the extractor's paragraph budget: a long book keeps its
+    /// emphasis colours instead of losing reflow over them.
+    static let defaultMaximumStyleRunCount = 1_000_000
 
     static func paragraphs(
         from source: NSAttributedString,
         boundsForRange: ((NSRange) -> CGRect?)? = nil,
-        maximumParagraphCount: Int = 20_000
+        maximumParagraphCount: Int = PDFTextExtractor.defaultMaximumParagraphCount
     ) throws -> [ReaderStyledText] {
         let limit = max(1, maximumParagraphCount)
         var paragraphs: [ReaderStyledText] = []

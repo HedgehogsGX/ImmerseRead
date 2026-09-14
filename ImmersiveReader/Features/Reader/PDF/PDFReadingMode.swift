@@ -9,9 +9,9 @@ enum PDFReadingMode: String, Codable, CaseIterable, Hashable, Sendable, Identifi
     var title: String {
         switch self {
         case .reflow:
-            "正文阅读"
+            String(localized: "正文阅读")
         case .original:
-            "原版式"
+            String(localized: "原版式")
         }
     }
 }

@@ -12,6 +12,7 @@ struct ReaderContainerView: View {
     @State private var settings: ReaderDisplaySettings
     @State private var presentedSheet: PresentedSheet?
     @State private var pdfLocation: PDFReadingLocation
+    @StateObject private var navigationModel: ReaderNavigationModel
 
     init(
         document: ReaderDocument,
@@ -42,6 +43,9 @@ struct ReaderContainerView: View {
         _settings = State(
             initialValue: initialSettings ?? ReaderSettingsStore.load()
         )
+        _navigationModel = StateObject(
+            wrappedValue: ReaderNavigationModel(document: document)
+        )
     }
 
     var body: some View {
@@ -65,13 +69,17 @@ struct ReaderContainerView: View {
                     .accessibilityIdentifier("reader.settings.open")
                 }
             }
+            ToolbarItem(placement: .topBarTrailing) {
+                ReaderNavigationToolbar(
+                    model: navigationModel,
+                    supportsNavigation: document.format != .legacyWord
+                )
+            }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
+            // PDF carries its own bar, because it depends on extraction state.
             if document.format.supportsTypography, document.format != .pdf {
-                ReaderFontSizeControls(settings: $settings)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 8)
-                    .background(.bar)
+                ReaderBottomBar(settings: $settings)
             }
         }
         .sheet(item: $presentedSheet) { sheet in
@@ -85,11 +93,22 @@ struct ReaderContainerView: View {
                 .presentationDetents([.medium, .large])
             }
         }
+        .task {
+            navigationModel.seedLocation(
+                Self.openingLocation(
+                    format: document.format,
+                    pdfLocation: pdfLocation,
+                    textLocation: initialTextLocation,
+                    epubLocation: initialEPUBLocation
+                )
+            )
+        }
         .onChange(of: settings) { _, newSettings in
             ReaderSettingsStore.save(newSettings)
         }
         .onChange(of: pdfLocation) { _, newLocation in
             guard document.format == .pdf else { return }
+            navigationModel.report(location: .pdf(newLocation))
             onLocationChange(newLocation.progress(for: newLocation.mode), newLocation.encoded())
         }
     }
@@ -103,14 +122,16 @@ struct ReaderContainerView: View {
                 settings: settings,
                 initialLocation: initialTextLocation,
                 initialProgress: initialProgress,
-                onLocationChange: reportTextLocation
+                onLocationChange: reportTextLocation,
+                navigationModel: navigationModel
             )
 
         case .pdf:
             PDFDocumentReaderView(
                 document: document,
                 settings: $settings,
-                location: $pdfLocation
+                location: $pdfLocation,
+                navigationModel: navigationModel
             )
             .id(document.id)
 
@@ -121,8 +142,10 @@ struct ReaderContainerView: View {
                 initialLocation: initialEPUBLocation,
                 initialProgress: initialProgress,
                 onLocationChange: { location in
+                    navigationModel.report(location: .epub(location))
                     onLocationChange(location.progress, location.encoded())
                 },
+                navigationModel: navigationModel,
                 reader: epubReader
             )
 
@@ -132,7 +155,8 @@ struct ReaderContainerView: View {
                 settings: settings,
                 initialLocation: initialTextLocation,
                 initialProgress: initialProgress,
-                onLocationChange: reportTextLocation
+                onLocationChange: reportTextLocation,
+                navigationModel: navigationModel
             )
 
         case .legacyWord:
@@ -141,7 +165,34 @@ struct ReaderContainerView: View {
     }
 
     private func reportTextLocation(_ location: TextReadingLocation) {
+        navigationModel.report(location: .text(location))
         onLocationChange(location.progress, location.encoded())
+    }
+
+    /// Where a document sits the moment it opens.
+    ///
+    /// PDF and reflowable text restore to a known position (or the very start),
+    /// so they can be bookmarked right away. EPUB waits for the navigator to
+    /// report, because only a restored locator is trustworthy before then.
+    static func openingLocation(
+        format: BookFormat,
+        pdfLocation: PDFReadingLocation,
+        textLocation: TextReadingLocation?,
+        epubLocation: EPUBReadingLocation?
+    ) -> ReaderNavigationLocation? {
+        switch format {
+        case .pdf:
+            .pdf(pdfLocation)
+        case .plainText, .markdown, .docx:
+            .text(textLocation ?? TextReadingLocation(
+                anchor: ReaderTextAnchor(blockIndex: 0, offsetInBlock: 0),
+                progress: 0
+            ))
+        case .epub:
+            epubLocation.map(ReaderNavigationLocation.epub)
+        case .legacyWord:
+            nil
+        }
     }
 }
 

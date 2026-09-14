@@ -6,6 +6,7 @@ struct DOCXReaderView: View {
     let initialLocation: TextReadingLocation?
     let initialProgress: Double
     let onLocationChange: (TextReadingLocation) -> Void
+    let navigationModel: ReaderNavigationModel?
 
     private let loader: any ReaderTextLoading
 
@@ -15,6 +16,7 @@ struct DOCXReaderView: View {
         initialLocation: TextReadingLocation? = nil,
         initialProgress: Double = 0,
         onLocationChange: @escaping (TextReadingLocation) -> Void = { _ in },
+        navigationModel: ReaderNavigationModel? = nil,
         loader: any ReaderTextLoading = DOCXReaderTextLoader()
     ) {
         self.document = document
@@ -22,6 +24,7 @@ struct DOCXReaderView: View {
         self.initialLocation = initialLocation
         self.initialProgress = initialProgress.clampedToUnitInterval
         self.onLocationChange = onLocationChange
+        self.navigationModel = navigationModel
         self.loader = loader
     }
 
@@ -32,6 +35,7 @@ struct DOCXReaderView: View {
             initialLocation: initialLocation,
             initialProgress: initialProgress,
             onLocationChange: onLocationChange,
+            navigationModel: navigationModel,
             loader: loader
         )
     }

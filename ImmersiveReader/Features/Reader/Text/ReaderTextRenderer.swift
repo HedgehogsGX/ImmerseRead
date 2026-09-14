@@ -54,7 +54,7 @@ enum ReaderTextRenderer {
         sourceColors: inout [ReaderTextColor: UIColor],
         to result: NSMutableAttributedString
     ) {
-        let bodyFont = UIFont.systemFont(ofSize: settings.fontSize)
+        let bodyFont = settings.fontFamily.font(ofSize: settings.fontSize)
         let textColor = settings.theme.textColor
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineHeightMultiple = settings.lineHeightMultiple
@@ -77,7 +77,7 @@ enum ReaderTextRenderer {
             case 3: 1.24
             default: 1.1
             }
-            font = .systemFont(ofSize: settings.fontSize * scale, weight: .bold)
+            font = settings.fontFamily.font(ofSize: settings.fontSize * scale, weight: .bold)
             paragraphStyle.paragraphSpacingBefore = settings.fontSize * 0.45
             paragraphStyle.paragraphSpacing = settings.fontSize * 0.7
 
@@ -107,7 +107,7 @@ enum ReaderTextRenderer {
         case .blockQuote(let value):
             text = value
             prefix = "│  "
-            font = .italicSystemFont(ofSize: settings.fontSize)
+            font = settings.fontFamily.font(ofSize: settings.fontSize, italic: true)
             paragraphStyle.firstLineHeadIndent = settings.fontSize * 0.7
             paragraphStyle.headIndent = settings.fontSize * 0.7
 
@@ -123,7 +123,7 @@ enum ReaderTextRenderer {
         case .divider:
             text = "•••"
             prefix = ""
-            font = .systemFont(ofSize: settings.fontSize, weight: .regular)
+            font = settings.fontFamily.font(ofSize: settings.fontSize)
             paragraphStyle.alignment = .center
             paragraphStyle.paragraphSpacing = settings.fontSize
         }

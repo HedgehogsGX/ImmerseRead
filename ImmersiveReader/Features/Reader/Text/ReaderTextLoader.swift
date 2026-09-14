@@ -3,6 +3,7 @@ import Foundation
 struct ReaderTextContent: Hashable, Codable, Sendable {
     let format: BookFormat
     let blocks: [ReaderSemanticBlock]
+    var sourceMap: ReaderTextSourceMap? = nil
 }
 
 protocol ReaderTextLoading: Sendable {
@@ -30,12 +31,21 @@ struct LocalReaderTextLoader: ReaderTextLoading {
         }
 
         try Task.checkCancellation()
-        let blocks = ReaderSemanticParser.parse(source, format: document.format)
-        guard !blocks.isEmpty else {
+        let format = document.format
+        let content = await Task.detached(priority: .userInitiated) {
+            let blocks = ReaderSemanticParser.parse(source, format: format)
+            return ReaderTextContent(
+                format: format,
+                blocks: blocks,
+                sourceMap: format == .plainText ? ReaderTextSourceMap(source: source, blocks: blocks) : nil
+            )
+        }.value
+        try Task.checkCancellation()
+        guard !content.blocks.isEmpty else {
             throw ReaderTextLoadingError.emptyDocument
         }
 
-        return ReaderTextContent(format: document.format, blocks: blocks)
+        return content
     }
 
     private static func readData(from url: URL) throws -> Data {
@@ -55,7 +65,13 @@ struct LocalReaderTextLoader: ReaderTextLoading {
             throw ReaderTextLoadingError.fileTooLarge(maximumBytes: maximumFileSize)
         }
 
-        return try Data(contentsOf: url, options: .mappedIfSafe)
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+        let data = try handle.read(upToCount: maximumFileSize + 1) ?? Data()
+        guard data.count <= maximumFileSize else {
+            throw ReaderTextLoadingError.fileTooLarge(maximumBytes: maximumFileSize)
+        }
+        return data
     }
 
     private static func decode(_ data: Data) -> String? {
@@ -83,15 +99,15 @@ enum ReaderTextLoadingError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .unsupportedFormat(let format):
-            "暂不支持将 \(format.displayName) 作为纯文本读取。"
+            String(localized: "暂不支持将 \(format.displayName) 作为纯文本读取。")
         case .notARegularFile:
-            "选择的项目不是可读取的文件。"
+            String(localized: "选择的项目不是可读取的文件。")
         case .fileTooLarge(let maximumBytes):
-            "文本文件超过 \(maximumBytes / 1_024 / 1_024) MB 的首版限制。"
+            String(localized: "文本文件超过 \(maximumBytes / 1_024 / 1_024) MB 的大小限制。")
         case .unknownTextEncoding:
-            "无法识别文本编码；当前支持 UTF-8 和 UTF-16。"
+            String(localized: "无法识别文本编码；当前支持 UTF-8 和 UTF-16。")
         case .emptyDocument:
-            "文档没有可显示的正文。"
+            String(localized: "文档没有可显示的正文。")
         }
     }
 }

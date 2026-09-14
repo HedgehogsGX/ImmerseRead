@@ -3,6 +3,7 @@ import Foundation
 
 actor BookImportService {
     static let defaultMaximumFileSize = DocumentFileLimits.generalMaximumBytes
+    static let coverFilename = "cover.jpg"
 
     private let explicitLibraryRootURL: URL?
     private let maximumFileSize: Int64
@@ -11,6 +12,7 @@ actor BookImportService {
     private let fileManager = FileManager.default
     private let formatDetector = BookFormatDetector()
     private let archiveSafetyValidator = ArchiveSafetyValidator()
+    private let coverImageProcessor = CoverImageProcessor()
     private var sessionImportsByHash: [String: UUID] = [:]
 
     init(
@@ -162,16 +164,34 @@ actor BookImportService {
                 throw BookImportError.duplicate(contentHash: contentHash)
             }
 
+            let metadataExtractor = await MainActor.run { BookMetadataExtractor() }
+            let metadata = await metadataExtractor.extract(
+                from: stagedOriginalURL,
+                format: detection.format
+            )
+            try Task.checkCancellation()
+            let coverRelativePath = persistCover(
+                metadata.coverData,
+                for: bookID,
+                in: stagingDirectoryURL
+            )
+            let coverSource: BookCoverSource = coverRelativePath == nil
+                ? .generated
+                : metadata.coverSource
+
             try fileManager.moveItem(at: stagingDirectoryURL, to: finalDirectoryURL)
             sessionImportsByHash[contentHash] = bookID
 
             return BookImportResult(
                 id: bookID,
-                title: Self.makeTitle(from: sourceURL),
+                title: metadata.title ?? Self.makeTitle(from: sourceURL),
+                author: metadata.author,
                 originalFilename: sourceURL.lastPathComponent,
                 format: detection.format,
                 textEncoding: detection.textEncoding,
                 storedRelativePath: "\(bookID.uuidString)/\(storedFilename)",
+                coverRelativePath: coverRelativePath,
+                coverSource: coverSource,
                 contentHash: contentHash,
                 fileByteCount: copiedByteCount,
                 importedAt: now()
@@ -189,41 +209,79 @@ actor BookImportService {
     }
 
     func storedFileURL(for relativePath: String) throws -> URL {
-        let pathComponents = relativePath.split(
-            separator: "/",
-            omittingEmptySubsequences: false
-        )
+        let (bookID, storedFilename) = try validateOriginalPath(relativePath)
+        return try existingStoredFileURL(bookID: bookID, filename: storedFilename)
+    }
 
-        let storedFilename = String(pathComponents.last ?? "")
-        let storedFilenameURL = URL(fileURLWithPath: storedFilename)
-        let storedExtension = storedFilenameURL.pathExtension.lowercased()
+    func storedCoverURL(for relativePath: String) throws -> URL {
+        let (bookID, storedFilename) = try validateStoredPath(
+            relativePath,
+            baseName: "cover"
+        ) { $0 == "jpg" }
+        return try existingStoredFileURL(bookID: bookID, filename: storedFilename)
+    }
 
-        guard pathComponents.count == 2,
-              let bookID = UUID(uuidString: String(pathComponents[0])),
-              storedFilenameURL.deletingPathExtension().lastPathComponent == "original",
-              BookFormat(fileExtension: storedExtension) != nil
-        else {
+    /// Stores a picture the reader picked, downsized to the shelf's budget.
+    func replaceCover(for bookID: UUID, imageData: Data) throws -> String {
+        guard let coverData = coverImageProcessor.encodedCover(fromImageData: imageData) else {
+            throw BookImportError.unusableCoverImage
+        }
+
+        let directoryURL = try existingBookDirectoryURL(for: bookID)
+        guard let relativePath = persistCover(coverData, for: bookID, in: directoryURL) else {
+            throw BookImportError.unusableCoverImage
+        }
+        return relativePath
+    }
+
+    /// Drops the stored picture so the shelf falls back to lettering.
+    func removeCover(for bookID: UUID) throws {
+        let coverURL = try resolveLibraryRootURL()
+            .appendingPathComponent(bookID.uuidString, isDirectory: true)
+            .appendingPathComponent(Self.coverFilename, isDirectory: false)
+
+        guard fileManager.fileExists(atPath: coverURL.path) else {
+            return
+        }
+        do {
+            try fileManager.removeItem(at: coverURL)
+        } catch {
+            throw storageFailure(from: error)
+        }
+    }
+
+    /// Looks inside the stored document again and keeps whatever cover it finds.
+    ///
+    /// Used for books imported before the app read covers, and whenever the
+    /// reader asks for the document's own cover back.
+    func detectCover(
+        for bookID: UUID,
+        storedRelativePath: String,
+        format: BookFormat
+    ) async throws -> BookCoverDetection {
+        let (pathBookID, storedFilename) = try validateOriginalPath(storedRelativePath)
+        guard pathBookID == bookID else {
             throw BookImportError.unsafeStoredPath
         }
+        let fileURL = try existingStoredFileURL(bookID: bookID, filename: storedFilename)
 
-        let candidateURL = try resolveLibraryRootURL()
-            .appendingPathComponent(bookID.uuidString, isDirectory: true)
-            .appendingPathComponent(storedFilename, isDirectory: false)
+        let metadataExtractor = await MainActor.run { BookMetadataExtractor() }
+        let metadata = await metadataExtractor.extract(from: fileURL, format: format)
+        try Task.checkCancellation()
 
-        let values: URLResourceValues
-        do {
-            values = try candidateURL.resourceValues(forKeys: [
-                .isRegularFileKey,
-                .isSymbolicLinkKey,
-            ])
-        } catch {
-            throw BookImportError.storedFileMissing
+        guard let coverData = metadata.coverData else {
+            try removeCover(for: bookID)
+            return .none
         }
 
-        guard values.isRegularFile == true, values.isSymbolicLink != true else {
-            throw BookImportError.storedFileMissing
+        let directoryURL = try existingBookDirectoryURL(for: bookID)
+        guard let relativePath = persistCover(coverData, for: bookID, in: directoryURL) else {
+            return .none
         }
-        return candidateURL
+        return BookCoverDetection(
+            coverRelativePath: relativePath,
+            source: metadata.coverSource
+        )
     }
 
     func removeStoredFiles(
@@ -327,12 +385,112 @@ actor BookImportService {
         throw BookImportError.identifierCollision
     }
 
+    private func persistCover(
+        _ data: Data?,
+        for bookID: UUID,
+        in directoryURL: URL
+    ) -> String? {
+        guard let data, !data.isEmpty else {
+            return nil
+        }
+
+        let coverFilename = Self.coverFilename
+        let coverURL = directoryURL.appendingPathComponent(coverFilename)
+        do {
+            try data.write(to: coverURL, options: .atomic)
+            let values = try coverURL.resourceValues(forKeys: [
+                .isRegularFileKey,
+                .isSymbolicLinkKey,
+                .fileSizeKey,
+            ])
+            guard values.isRegularFile == true,
+                  values.isSymbolicLink != true,
+                  values.fileSize == data.count
+            else {
+                return nil
+            }
+        } catch {
+            return nil
+        }
+        return "\(bookID.uuidString)/\(coverFilename)"
+    }
+
+    private func validateOriginalPath(_ relativePath: String) throws -> (UUID, String) {
+        try validateStoredPath(relativePath, baseName: "original") {
+            BookFormat(fileExtension: $0) != nil
+        }
+    }
+
+    private func existingBookDirectoryURL(for bookID: UUID) throws -> URL {
+        let directoryURL = try resolveLibraryRootURL()
+            .appendingPathComponent(bookID.uuidString, isDirectory: true)
+
+        let values: URLResourceValues
+        do {
+            values = try directoryURL.resourceValues(forKeys: [
+                .isDirectoryKey,
+                .isSymbolicLinkKey,
+            ])
+        } catch {
+            throw BookImportError.storedFileMissing
+        }
+
+        guard values.isDirectory == true, values.isSymbolicLink != true else {
+            throw BookImportError.storedFileMissing
+        }
+        return directoryURL
+    }
+
+    private func validateStoredPath(
+        _ relativePath: String,
+        baseName: String,
+        extensionIsAllowed: (String) -> Bool
+    ) throws -> (UUID, String) {
+        let pathComponents = relativePath.split(
+            separator: "/",
+            omittingEmptySubsequences: false
+        )
+        let storedFilename = String(pathComponents.last ?? "")
+        let storedFilenameURL = URL(fileURLWithPath: storedFilename)
+        let storedExtension = storedFilenameURL.pathExtension.lowercased()
+
+        guard pathComponents.count == 2,
+              let bookID = UUID(uuidString: String(pathComponents[0])),
+              storedFilenameURL.deletingPathExtension().lastPathComponent == baseName,
+              extensionIsAllowed(storedExtension)
+        else {
+            throw BookImportError.unsafeStoredPath
+        }
+        return (bookID, storedFilename)
+    }
+
+    private func existingStoredFileURL(bookID: UUID, filename: String) throws -> URL {
+        let candidateURL = try resolveLibraryRootURL()
+            .appendingPathComponent(bookID.uuidString, isDirectory: true)
+            .appendingPathComponent(filename, isDirectory: false)
+
+        let values: URLResourceValues
+        do {
+            values = try candidateURL.resourceValues(forKeys: [
+                .isRegularFileKey,
+                .isSymbolicLinkKey,
+            ])
+        } catch {
+            throw BookImportError.storedFileMissing
+        }
+
+        guard values.isRegularFile == true, values.isSymbolicLink != true else {
+            throw BookImportError.storedFileMissing
+        }
+        return candidateURL
+    }
+
     private static func makeTitle(from sourceURL: URL) -> String {
         let proposedTitle = sourceURL
             .deletingPathExtension()
             .lastPathComponent
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        return proposedTitle.isEmpty ? "未命名文档" : proposedTitle
+        return proposedTitle.isEmpty ? String(localized: "未命名文档") : proposedTitle
     }
 
     private func storageFailure(from error: Error) -> BookImportError {

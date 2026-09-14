@@ -6,6 +6,8 @@ enum ReaderSettingsStore {
         static let layoutMode = "reader.settings.layoutMode"
         static let fontSize = "reader.settings.fontSize"
         static let lineHeight = "reader.settings.lineHeight"
+        static let fontFamily = "reader.settings.fontFamily"
+        static let margin = "reader.settings.margin"
         static let theme = "reader.settings.theme"
     }
 
@@ -23,6 +25,14 @@ enum ReaderSettingsStore {
         if defaults.object(forKey: Key.lineHeight) != nil {
             settings.lineHeightMultiple = defaults.double(forKey: Key.lineHeight)
                 .clamped(to: ReaderDisplaySettings.lineHeightRange)
+        }
+        if let rawFontFamily = defaults.string(forKey: Key.fontFamily),
+           let fontFamily = ReaderFontFamily(rawValue: rawFontFamily) {
+            settings.fontFamily = fontFamily
+        }
+        if defaults.object(forKey: Key.margin) != nil {
+            settings.margin = defaults.double(forKey: Key.margin)
+                .clamped(to: ReaderDisplaySettings.marginRange)
         }
         if let rawTheme = defaults.string(forKey: Key.theme),
            let theme = ReaderTheme(rawValue: rawTheme) {
@@ -44,6 +54,11 @@ enum ReaderSettingsStore {
         defaults.set(
             settings.lineHeightMultiple.clamped(to: ReaderDisplaySettings.lineHeightRange),
             forKey: Key.lineHeight
+        )
+        defaults.set(settings.fontFamily.rawValue, forKey: Key.fontFamily)
+        defaults.set(
+            settings.margin.clamped(to: ReaderDisplaySettings.marginRange),
+            forKey: Key.margin
         )
         defaults.set(settings.theme.rawValue, forKey: Key.theme)
     }
