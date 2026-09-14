@@ -1,65 +1,67 @@
-# ImmersiveReader（沉浸阅读）
+# ImmersiveReader
 
-一个面向 iPhone 和 iPad 的本地优先电子书阅读器。文档通过系统文件选择器导入，原文件保存在应用沙盒，阅读与转换均在设备端完成。
+A local-first ebook reader for iPhone and iPad.
 
-## 当前 MVP
+Documents are imported through the system file picker and copied into the app's
+sandbox. Reading, conversion and text extraction all happen on the device —
+nothing is uploaded, and the original file is never modified.
 
-- iOS 17+、SwiftUI、SwiftData、Swift 6
-- 本地书架、批量导入、重复内容检测、删除与启动期存储对账
-- 书架支持搜索、排序（最近阅读／最近导入／书名／进度）、封面与列表两种视图，并把正在读的书放在顶部
-- 封面自动识别：EPUB 取声明的封面，PDF 渲染首个非空白页面，DOCX 取文档缩略图或正文首张足够大的图片
-- 自定义封面：可从照片或文件选择图片、重新识别文件内封面、移除封面，没有图片时使用按书名排版的文字封面（8 种配色）
-- 阅读进度、分页/滚动模式、14–40 pt 字号、行距、浅色/米色/深色主题；正文底部可直接调字号
-- EPUB：Readium 3.11，支持无 DRM 的可重排 EPUB
-- PDF：默认提取已有文字层及文字强调色，重新换行和分页，字号变化是真实正文重排；保留 PDFKit 原版式切换
-- TXT / Markdown：UTF-8，以及带 BOM 的 UTF-16；Markdown 支持常见块级与行内格式
-- DOCX：内置 Mammoth，在无网络的临时 WebKit 环境中转换并清洗为可重排正文
-- 旧版 `.doc`：仅使用系统 Quick Look 做兼容预览，不承诺电子书式重排
+## Formats
 
-扫描 PDF OCR、账户、云同步、AI、批注、DRM 和完整 Word 版式还不在首版范围内。DOCX 首版保留标题、段落、列表、引用、代码与表格文字，主动内容、外链属性和图片会被移除。
+| Format | What you get |
+| --- | --- |
+| EPUB | Reflowable, DRM-free books, via Readium |
+| PDF | The existing text layer, reflowed at any font size and keeping emphasis colours; the original page layout is one tap away |
+| TXT / Markdown | UTF-8, and UTF-16 with a BOM; common Markdown blocks and inline formatting |
+| DOCX | Converted on device with a bundled copy of Mammoth, then sanitised into reflowable text |
+| DOC (legacy) | Quick Look preview only |
 
-### PDF 正文阅读
+Not in scope: OCR for scanned pages, accounts, cloud sync, AI, annotations, DRM.
 
-- 底部的减小/增大按钮可直接调整字号，也可在阅读设置中用滑块调整字号与行距，并实时预览
-- 底部固定一行只放阅读时会用到的两项：翻页/滚动切换与字号；阅读区域不再常驻模式选择器和说明文字
-- PDF 默认按正文重排打开，原版式切换收进阅读设置；文档会记住上次使用的模式
-- 分页和滚动均按正文字符位置恢复阅读位置，调字号不会用整页缩放代替重排
-- 读取原 PDF 的彩色文字片段，保留说话人姓名、局部词语等强调色；不根据姓名硬编码颜色，调整字号与分页不会将其清除或扩散到整段
-- 浅色/米色主题保留原强调色；深色主题适度提亮过暗颜色以保持辨识。黑白灰普通正文随主题适配，避免封面白字在浅色背景上消失
-- 结合实际段间距、新增缩进及“彩色短前缀 + 分隔符 + 普通对白”等线索恢复段落；同一段对白的持续缩进与普通彩色续行不会被当作新段
-- 正文与原版式分别保存进度，并记住该文档上次使用的模式；旧版的 PDF 页数进度只迁移到原版式
-- 使用设备端 [PDFKit 富文本提取](https://developer.apple.com/documentation/pdfkit/pdfpage/attributedstring)，不会上传文件或修改原文件；切换字号不会重新提取 PDF
-- 正文模式只包含已有文字层：不恢复图片、表格版式或多栏阅读顺序，不对图片/扫描内容做 OCR。无文字页会列出提示；全扫描件可切换原版查看
-- 受密码或复制权限限制的 PDF 不提取正文；保留原版式入口，但不绕过密码限制
-- PDF 的分段恢复仍是基于文字层和页面几何的保守推断，不承诺任意复杂版式与原件一比一一致；需要精确布局时查看原版式
+## Library
 
-### 书架与封面
+Covers are read from the files themselves — an EPUB's declared cover, a PDF's
+first page, a DOCX's thumbnail or first picture. When a file has none, the shelf
+draws a lettering cover from the title. Any cover can be replaced with a picture
+from Photos or Files, re-detected, or removed, and the title, author and palette
+can be edited.
 
-- 导入时读取文档自带的元数据：EPUB 读书名、作者与封面；PDF 读文档属性并渲染封面；DOCX 读 `docProps/core.xml` 的标题与作者；Markdown 读 YAML 前置信息或首个一级标题
-- PDF 封面取前 3 页中第一张不是空白的页面；小于 1 英寸的页面不作为封面
-- DOCX 优先使用 Word 保存的 `docProps/thumbnail`，否则按图片编号顺序取首张两边都不小于 160 像素的图片，避免把项目符号和图标当成封面
-- 封面统一缩放到最长边 680 像素、体积不超过 1.5 MB 的 JPEG，带透明通道的图片会先合成到白底；来源图片超过 32 MB 不处理
-- 封面只存放在书籍目录下的 `cover.jpg`，替换与移除都是本地文件操作，不修改原文件
-- 升级前导入的书籍会在首次进入书架时补做一次封面识别；识别不到图片的书籍记录为文字封面，不会重复扫描
-- 文字封面按书名与作者稳定地选择配色，也可以在封面页手动指定，并同时修改书名与作者
+The shelf supports search, sorting, a cover grid or a list, and keeps the book
+you are part-way through at the top.
 
-## 安全与文件限制
+## Reading
 
-- 导入采用有界流式复制和 SHA-256 去重，不直接依赖外部文件的长期权限
-- EPUB / DOCX 会校验文档结构、条目路径、符号链接、重复路径、数量、膨胀体积和压缩比例
-- TXT / Markdown：8 MiB；DOCX：32 MiB；PDF：256 MiB；EPUB：512 MiB；旧版 DOC：128 MiB
-- EPUB 解压后内容上限为 512 MiB；DOCX 转换后的 HTML 上限为 8 MiB
-- PDF 正文提取最多 5,000 页、500,000 段、1,000,000 个颜色片段、原始提取文字最多 64 MiB；超过限制可使用原版式
-- 段落上限按长篇书籍设置；接近上限的文档首次提取会明显变慢并占用较多内存，提取结果会缓存在书籍目录下，重新打开不再重复提取
+Pages turn or scroll, at 14–40 pt, with adjustable line height and margins and a
+light, sepia or dark theme. The bottom bar carries the two choices you make while
+reading — page turning and font size — and everything else lives in the reading
+settings sheet.
 
-## 生成与验证工程
+Reading positions are stored per book as a position in the text, not as a scroll
+offset, so changing the font size reopens the book where you left off. PDFs keep
+separate positions for reflowed text and original pages.
 
-工程由 [XcodeGen](https://github.com/yonaskolb/XcodeGen) 生成：
+## Limits
+
+Import caps: 32 MiB for TXT, Markdown and DOCX, 128 MiB for legacy DOC, 256 MiB
+for PDF, 512 MiB for EPUB. EPUB and DOCX archives are checked for unsafe paths,
+symlinks and decompression bombs before they are opened.
+
+PDF text extraction handles up to 5,000 pages and 500,000 paragraphs. A long
+document takes a while the first time; the result is cached beside the book, so
+reopening is immediate. Anything past those limits can still be read as original
+pages.
+
+## Building
+
+The project is generated with [XcodeGen](https://github.com/yonaskolb/XcodeGen):
 
 ```sh
 xcodegen generate
 ```
 
-打开 `ImmersiveReader.xcodeproj`，选择 `ImmersiveReader` scheme 即可构建。依赖通过 Swift Package Manager 固定版本：Readium 3.11.0、SwiftSoup 2.13.9，以及 Readium ZIPFoundation 3.0.1。
+Open `ImmersiveReader.xcodeproj` and build the `ImmersiveReader` scheme.
+Dependencies are pinned through Swift Package Manager: Readium 3.11.0,
+SwiftSoup 2.13.9, Readium ZIPFoundation 3.0.1. The bundled Mammoth build and its
+licence are in `ImmersiveReader/Resources/Vendor/Mammoth/`.
 
-内置的 Mammoth 浏览器构建及其许可证位于 `ImmersiveReader/Resources/Vendor/Mammoth/`。
+Requires iOS 17 or later.
