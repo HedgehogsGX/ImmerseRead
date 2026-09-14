@@ -1,10 +1,10 @@
 import PhotosUI
 import SwiftUI
 
-/// Lets the reader replace a cover with their own picture, ask for the
-/// document's own cover back, or fall back to lettering — and fix the title
-/// that the lettering is built from.
-struct BookCoverEditorView: View {
+/// Edits what the shelf knows about a book: its title and author, and its
+/// cover — the reader's own picture, the document's own cover, or lettering
+/// built from the title.
+struct BookDetailsEditorView: View {
     let book: LibraryBookPresentation
     /// Whether this format can carry a cover the app could find again.
     let canDetect: Bool
@@ -29,16 +29,15 @@ struct BookCoverEditorView: View {
         NavigationStack {
             Form {
                 previewSection
+                detailsSection
                 pictureSection
 
                 if book.coverURL == nil {
                     letteringSection
                 }
-
-                detailsSection
             }
             .disabled(isWorking)
-            .navigationTitle("封面")
+            .navigationTitle("书籍信息")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -209,7 +208,7 @@ struct BookCoverEditorView: View {
         } header: {
             Text("书籍信息")
         } footer: {
-            Text("书名和作者同时用于书架显示和文字封面。")
+            Text("书名和作者用于书架显示、搜索和文字封面，改动不会影响原文件。")
         }
     }
 
@@ -295,14 +294,14 @@ struct BookCoverEditorView: View {
 }
 
 #Preview("Lettering cover") {
-    BookCoverEditorView(
+    BookDetailsEditorView(
         book: LibraryBookPresentation.previews[1],
         canDetect: false
     )
 }
 
 #Preview("Detected cover") {
-    BookCoverEditorView(
+    BookDetailsEditorView(
         book: LibraryBookPresentation.previews[0],
         canDetect: true
     )
