@@ -77,11 +77,9 @@ struct ReaderContainerView: View {
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
+            // PDF carries its own bar, because it depends on extraction state.
             if document.format.supportsTypography, document.format != .pdf {
-                ReaderFontSizeControls(settings: $settings)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 8)
-                    .background(.bar)
+                ReaderBottomBar(settings: $settings)
             }
         }
         .sheet(item: $presentedSheet) { sheet in

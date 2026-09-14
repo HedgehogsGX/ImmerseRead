@@ -55,9 +55,9 @@ struct PDFDocumentReaderView: View {
         }
     }
 
-    /// One row at the bottom carries the mode switch in both directions, so
-    /// peeking at the original page and coming back are each a single tap and
-    /// neither costs height in the reading surface.
+    /// Reading choices only: how pages advance, and type size. Switching to the
+    /// document's original layout is a once-per-document decision and lives in
+    /// the reading settings sheet.
     @ViewBuilder
     private var bottomBar: some View {
         switch location.mode {
@@ -65,42 +65,12 @@ struct PDFDocumentReaderView: View {
             // While extracting or after a failure the surface owns the screen;
             // the failure state offers its own way to the original.
             if case .ready = phase {
-                modeBar(showsFontSize: true)
+                ReaderBottomBar(settings: $settings)
             }
 
         case .original:
-            modeBar(showsFontSize: false)
-        }
-    }
-
-    private func modeBar(showsFontSize: Bool) -> some View {
-        VStack(spacing: 0) {
-            Divider()
-
-            HStack(spacing: 12) {
-                Button {
-                    location.mode = location.mode.toggled
-                } label: {
-                    Label(
-                        location.mode.toggled.title,
-                        systemImage: location.mode.toggled.systemImage
-                    )
-                    .font(.subheadline)
-                    .frame(minHeight: 32)
-                }
-                .buttonStyle(.bordered)
-                .accessibilityLabel(String(localized: "切换到\(location.mode.toggled.title)"))
-                .accessibilityIdentifier("reader.pdf.modeToggle")
-
-                if showsFontSize {
-                    ReaderFontSizeControls(settings: $settings, showsLabel: false)
-                } else {
-                    Spacer(minLength: 0)
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 8)
-            .background(.bar)
+            // Type size cannot apply to rendered pages, but paging can.
+            ReaderBottomBar(settings: $settings, showsFontSize: false)
         }
     }
 

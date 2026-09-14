@@ -127,6 +127,16 @@ enum ReaderLayoutMode: String, CaseIterable, Hashable, Sendable, Identifiable {
             "scroll"
         }
     }
+
+    /// The way of reading the reader lands in when the switch is tapped.
+    var toggled: Self {
+        switch self {
+        case .paged:
+            .scrolling
+        case .scrolling:
+            .paged
+        }
+    }
 }
 
 enum ReaderTheme: String, CaseIterable, Hashable, Sendable, Identifiable {

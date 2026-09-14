@@ -14,23 +14,4 @@ enum PDFReadingMode: String, Codable, CaseIterable, Hashable, Sendable, Identifi
             String(localized: "原版式")
         }
     }
-
-    var systemImage: String {
-        switch self {
-        case .reflow:
-            "text.alignleft"
-        case .original:
-            "doc.richtext"
-        }
-    }
-
-    /// The mode the reader lands in when the switch is tapped.
-    var toggled: Self {
-        switch self {
-        case .reflow:
-            .original
-        case .original:
-            .reflow
-        }
-    }
 }
