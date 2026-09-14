@@ -19,9 +19,11 @@ struct PDFTextExtractor: PDFTextExtracting {
     static let extractionVersion = 1
 
     static let defaultMaximumFileSize = DocumentFileLimits.pdfMaximumBytes
-    static let defaultMaximumExtractedUTF8Bytes = 8 * 1_024 * 1_024
+    /// Raw extracted text budget. Sized so the paragraph cap below is what a
+    /// long book actually runs into, rather than this.
+    static let defaultMaximumExtractedUTF8Bytes = 64 * 1_024 * 1_024
     static let defaultMaximumPageCount = 5_000
-    static let defaultMaximumParagraphCount = 20_000
+    static let defaultMaximumParagraphCount = 500_000
     static let defaultMaximumStyleRunCount = PDFStyledTextNormalizer.defaultMaximumStyleRunCount
 
     private let maximumFileSize: Int64
@@ -216,31 +218,31 @@ enum PDFTextExtractionError: LocalizedError, Equatable, Sendable {
     var errorDescription: String? {
         switch self {
         case .unsupportedFormat(let format):
-            "无法将 \(format.displayName) 按 PDF 提取正文。"
+            String(localized: "无法将 \(format.displayName) 按 PDF 提取正文。")
         case .notARegularFile:
-            "选择的项目不是可读取的 PDF 文件。"
+            String(localized: "选择的项目不是可读取的 PDF 文件。")
         case .unreadableFile:
-            "暂时无法读取 PDF，请确认文件仍然存在且可以访问。"
+            String(localized: "暂时无法读取 PDF，请确认文件仍然存在且可以访问。")
         case .invalidDocument:
-            "PDF 已损坏或没有可读取的页面。"
+            String(localized: "PDF 已损坏或没有可读取的页面。")
         case .passwordProtected:
-            "这份 PDF 需要密码，目前无法提取正文。可以尝试查看原版式。"
+            String(localized: "这份 PDF 需要密码，目前无法提取正文。可以尝试查看原版式。")
         case .copyingNotAllowed:
-            "这份 PDF 不允许复制正文，无法进行文字重排。可以查看原版式。"
+            String(localized: "这份 PDF 不允许复制正文，无法进行文字重排。可以查看原版式。")
         case .fileTooLarge(let maximumBytes):
-            "PDF 超过 \(maximumBytes / 1_024 / 1_024) MB 的文字重排限制，可以查看原版式。"
+            String(localized: "PDF 超过 \(maximumBytes / 1_024 / 1_024) MB 的文字重排限制，可以查看原版式。")
         case .tooManyPages(let maximumPages):
-            "PDF 超过 \(maximumPages) 页，暂不支持文字重排。可以查看原版式。"
+            String(localized: "PDF 超过 \(maximumPages) 页，暂不支持文字重排。可以查看原版式。")
         case .tooManyParagraphs(let maximumParagraphs):
-            "PDF 正文超过 \(maximumParagraphs) 段，暂不支持文字重排。可以查看原版式。"
+            String(localized: "PDF 正文超过 \(maximumParagraphs) 段，暂不支持文字重排。可以查看原版式。")
         case .tooManyStyleRuns(let maximumRuns):
-            "PDF 的颜色片段超过 \(maximumRuns) 处，暂不支持文字重排。可以查看原版式。"
+            String(localized: "PDF 的颜色片段超过 \(maximumRuns) 处，暂不支持文字重排。可以查看原版式。")
         case .extractedTextTooLarge(let maximumBytes):
-            "PDF 正文超过 \(maximumBytes / 1_024 / 1_024) MB 的文字重排限制，可以查看原版式。"
+            String(localized: "PDF 正文超过 \(maximumBytes / 1_024 / 1_024) MB 的文字重排限制，可以查看原版式。")
         case .invalidPage(let pageNumber):
-            "无法读取 PDF 第 \(pageNumber) 页，未继续生成不完整正文。可以尝试查看原版式。"
+            String(localized: "无法读取 PDF 第 \(pageNumber) 页，未继续生成不完整正文。可以尝试查看原版式。")
         case .noExtractableText:
-            "这份 PDF 没有可提取的正文，可能是扫描件或图片。当前尚未提供 OCR，请查看原版式。"
+            String(localized: "这份 PDF 没有可提取的正文，可能是扫描件或图片。当前尚未提供 OCR，请查看原版式。")
         }
     }
 }

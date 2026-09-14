@@ -313,6 +313,17 @@ struct PDFTextExtractorTests {
     }
 
     @Test
+    func reflowsBooksWellPastTheOldTwentyThousandParagraphLimit() throws {
+        let longBook = String(repeating: "这是一段正文。\n\n", count: 60_000)
+
+        // Default limits: this is what a long PDF gets when it is opened for
+        // reading, and it used to fail at 20,000 paragraphs.
+        let paragraphs = try PDFTextNormalizer.paragraphs(from: longBook)
+
+        #expect(paragraphs.count == 60_000)
+    }
+
+    @Test
     func rejectsTinyParagraphFloodsWithASmallLimit() {
         let manyTinyParagraphs = String(repeating: "x\n\n", count: 100_000)
 

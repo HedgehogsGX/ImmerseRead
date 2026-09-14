@@ -94,13 +94,13 @@ struct ReadingLocationTests {
         let data = try #require(location.encoded())
         let payload = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
-        #expect(payload["version"] as? Int == 1)
+        #expect(payload["version"] as? Int == 2)
         #expect(location.progress == 1)
         #expect(TextReadingLocation.restore(from: data) == location)
 
         #expect(TextReadingLocation.restore(from: nil) == nil)
         #expect(TextReadingLocation.restore(from: Data("garbage".utf8)) == nil)
-        #expect(TextReadingLocation.restore(from: Data(#"{"version":2,"anchor":{"blockIndex":0,"offsetInBlock":0},"progress":0}"#.utf8)) == nil)
+        #expect(TextReadingLocation.restore(from: Data(#"{"version":99,"anchor":{"blockIndex":0,"offsetInBlock":0},"progress":0}"#.utf8)) == nil)
         // Another format's location must not be misread as a text location.
         #expect(TextReadingLocation.restore(from: PDFReadingLocation().encoded()) == nil)
         #expect(TextReadingLocation.restore(from: EPUBReadingLocation(locatorJSON: "{}", progress: 0).encoded()) == nil)

@@ -1,5 +1,12 @@
 import Foundation
 
+extension Double {
+    var clampedToUnitInterval: Double {
+        guard isFinite else { return 0 }
+        return min(max(self, 0), 1)
+    }
+}
+
 /// A position in reflowable text that survives typography changes and renderer
 /// updates: the semantic block plus a UTF-16 offset into that block's rendered text.
 struct ReaderTextAnchor: Codable, Hashable, Sendable {
@@ -10,6 +17,14 @@ struct ReaderTextAnchor: Codable, Hashable, Sendable {
         self.blockIndex = max(0, blockIndex)
         self.offsetInBlock = max(0, offsetInBlock)
     }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            blockIndex: try container.decode(Int.self, forKey: .blockIndex),
+            offsetInBlock: try container.decode(Int.self, forKey: .offsetInBlock)
+        )
+    }
 }
 
 /// Persisted reading position for TXT, Markdown and DOCX books.
@@ -19,10 +34,12 @@ struct ReaderTextAnchor: Codable, Hashable, Sendable {
 struct TextReadingLocation: Codable, Equatable, Sendable {
     let anchor: ReaderTextAnchor
     let progress: Double
+    let semanticVersion: Int
 
-    init(anchor: ReaderTextAnchor, progress: Double) {
+    init(anchor: ReaderTextAnchor, progress: Double, semanticVersion: Int = 2) {
         self.anchor = anchor
         self.progress = progress.clampedToUnitInterval
+        self.semanticVersion = semanticVersion
     }
 
     static func restore(from data: Data?) -> Self? {
@@ -37,7 +54,7 @@ struct TextReadingLocation: Codable, Equatable, Sendable {
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let version = try container.decode(Int.self, forKey: .version)
-        guard version == Self.currentVersion else {
+        guard (1...Self.currentVersion).contains(version) else {
             throw DecodingError.dataCorruptedError(
                 forKey: .version,
                 in: container,
@@ -46,18 +63,19 @@ struct TextReadingLocation: Codable, Equatable, Sendable {
         }
         self.init(
             anchor: try container.decode(ReaderTextAnchor.self, forKey: .anchor),
-            progress: try container.decode(Double.self, forKey: .progress)
+            progress: try container.decode(Double.self, forKey: .progress),
+            semanticVersion: version
         )
     }
 
     func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(Self.currentVersion, forKey: .version)
+        try container.encode(semanticVersion, forKey: .version)
         try container.encode(anchor, forKey: .anchor)
         try container.encode(progress, forKey: .progress)
     }
 
-    private static let currentVersion = 1
+    private static let currentVersion = 2
 
     private enum CodingKeys: String, CodingKey {
         case version

@@ -1,7 +1,7 @@
 import Foundation
 
 enum DocumentFileLimits {
-    static let plainTextMaximumBytes: Int64 = 8 * 1_024 * 1_024
+    static let plainTextMaximumBytes: Int64 = 32 * 1_024 * 1_024
     static let docxMaximumBytes: Int64 = 32 * 1_024 * 1_024
     static let pdfMaximumBytes: Int64 = 256 * 1_024 * 1_024
     static let epubMaximumBytes: Int64 = 512 * 1_024 * 1_024

@@ -23,28 +23,134 @@ enum ReaderSemanticParser {
         }
     }
 
+    static let maximumParagraphLength = 8_000
+
     private static func parsePlainText(_ source: String) -> [ReaderSemanticBlock] {
-        let lines = normalizedLines(source)
+        let lines = source.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
+        let usesBlankLineParagraphs = usesBlankLineParagraphs(lines)
         var blocks: [ReaderSemanticBlock] = []
-        var paragraph: [String] = []
+        var paragraph: [Substring] = []
 
         func flushParagraph() {
+            guard !paragraph.isEmpty else { return }
             let text = paragraph.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
-            if !text.isEmpty {
-                blocks.append(.paragraph(text))
-            }
             paragraph.removeAll(keepingCapacity: true)
+            guard !text.isEmpty else { return }
+            for piece in splitLongParagraph(text) {
+                blocks.append(.paragraph(piece))
+            }
         }
 
         for line in lines {
-            if line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.isEmpty {
                 flushParagraph()
+            } else if isChapterHeading(trimmed) {
+                flushParagraph()
+                blocks.append(.heading(level: 2, text: trimmed))
             } else {
                 paragraph.append(line)
+                if !usesBlankLineParagraphs {
+                    flushParagraph()
+                }
             }
         }
         flushParagraph()
         return blocks
+    }
+
+    private static func usesBlankLineParagraphs(_ lines: [Substring]) -> Bool {
+        var textLineCount = 0
+        var blankLineCount = 0
+        var pendingBlankLines = 0
+        for line in lines {
+            if line.allSatisfy(\.isWhitespace) {
+                pendingBlankLines += 1
+            } else {
+                if textLineCount > 0 {
+                    blankLineCount += pendingBlankLines
+                }
+                pendingBlankLines = 0
+                textLineCount += 1
+            }
+        }
+        guard textLineCount > 1 else { return true }
+        return Double(blankLineCount) / Double(textLineCount) >= 0.1
+    }
+
+    private static var chapterHeadingPatterns: [Regex<Substring>] { [
+        /^第[0-9零〇一二三四五六七八九十百千两]+[章节回卷部集篇](?:[\s：:、．.].*)?$/,
+        /^(?:卷[0-9零〇一二三四五六七八九十百千两]+|序章|序言|前言|引子|楔子|尾声|后记|終章|终章|番外(?:篇)?)(?:[\s：:、．.].*)?$/,
+        /^(?:Chapter|CHAPTER|Part|PART|Book|BOOK)\s+(?:[0-9]+|[IVXLCivxlc]+|[A-Za-z]+)(?:[\s:.\-–—].*)?$/,
+        /^(?:Prologue|Epilogue|PROLOGUE|EPILOGUE|Interlude|INTERLUDE)(?:[\s:.\-–—].*)?$/,
+    ] }
+
+    static func isChapterHeading(_ line: String) -> Bool {
+        guard line.count <= 40, !line.contains("\n") else { return false }
+        return chapterHeadingPatterns.contains { line.wholeMatch(of: $0) != nil }
+    }
+
+    private static func splitLongParagraph(_ text: String) -> [String] {
+        guard text.utf16.count > maximumParagraphLength else { return [text] }
+        var pieces: [String] = []
+        var current = ""
+        for line in text.split(separator: "\n", omittingEmptySubsequences: false) {
+            if line.utf16.count > maximumParagraphLength {
+                if !current.isEmpty {
+                    pieces.append(current)
+                    current = ""
+                }
+                pieces.append(contentsOf: splitLongLine(line))
+            } else if !current.isEmpty, current.utf16.count + line.utf16.count + 1 > maximumParagraphLength {
+                pieces.append(current)
+                current = String(line)
+            } else {
+                current = current.isEmpty ? String(line) : current + "\n" + line
+            }
+        }
+        if !current.isEmpty {
+            pieces.append(current)
+        }
+        return pieces
+    }
+
+    private static func splitLongLine(_ line: Substring) -> [String] {
+        var pieces: [String] = []
+        var current = ""
+        var sentence = ""
+        var currentLength = 0
+        var sentenceLength = 0
+        let sentenceTerminators: Set<Character> = ["。", "！", "？", "!", "?", ".", "…", "”", "\""]
+
+        func flushSentence() {
+            guard !sentence.isEmpty else { return }
+            if !current.isEmpty, currentLength + sentenceLength > maximumParagraphLength {
+                pieces.append(current)
+                current = ""
+                currentLength = 0
+            }
+            current += sentence
+            currentLength += sentenceLength
+            sentence = ""
+            sentenceLength = 0
+        }
+
+        for character in line {
+            let length = String(character).utf16.count
+            if sentenceLength + length > maximumParagraphLength {
+                flushSentence()
+            }
+            sentence.append(character)
+            sentenceLength += length
+            if sentenceTerminators.contains(character) || sentenceLength >= maximumParagraphLength {
+                flushSentence()
+            }
+        }
+        flushSentence()
+        if !current.isEmpty {
+            pieces.append(current)
+        }
+        return pieces
     }
 
     private static func parseMarkdown(_ source: String) -> [ReaderSemanticBlock] {
