@@ -69,7 +69,7 @@ struct LibraryContentView<Destination: View>: View {
     /// Shown above the shelf; `nil` while searching or when nothing is open.
     var continueReadingBook: LibraryBookPresentation?
     var isFiltering = false
-    var onEditCover: (LibraryBookPresentation) -> Void = { _ in }
+    var onEditDetails: (LibraryBookPresentation) -> Void = { _ in }
 
     private let columns = [
         GridItem(.adaptive(minimum: 140, maximum: 200), spacing: 18, alignment: .top)
@@ -163,11 +163,11 @@ struct LibraryContentView<Destination: View>: View {
         .buttonStyle(.plain)
         .contextMenu {
             Button {
-                onEditCover(book)
+                onEditDetails(book)
             } label: {
-                Label("更换封面", systemImage: "photo.on.rectangle.angled")
+                Label("重命名与封面", systemImage: "square.and.pencil")
             }
-            .accessibilityIdentifier("library.cover.\(book.id.uuidString)")
+            .accessibilityIdentifier("library.details.\(book.id.uuidString)")
 
             Button(role: .destructive) {
                 onDelete(book)

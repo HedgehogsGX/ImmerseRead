@@ -33,7 +33,7 @@ struct LibraryView: View {
             layout: layout,
             continueReadingBook: continueReadingBook,
             isFiltering: !trimmedSearchText.isEmpty,
-            onEditCover: presentCoverEditor
+            onEditDetails: presentDetailsEditor
         )
         .navigationTitle("书架")
         .searchable(
@@ -323,7 +323,7 @@ struct LibraryView: View {
     @ViewBuilder
     private func coverEditor(for target: LibraryCoverEditorTarget) -> some View {
         if let book = book(with: target.id) {
-            BookCoverEditorView(
+            BookDetailsEditorView(
                 book: presentation(for: book),
                 canDetect: book.format.canCarryCover,
                 isWorking: isCoverWorking,
@@ -353,7 +353,7 @@ struct LibraryView: View {
         }
     }
 
-    private func presentCoverEditor(_ presentation: LibraryBookPresentation) {
+    private func presentDetailsEditor(_ presentation: LibraryBookPresentation) {
         coverEditorError = nil
         coverEditorTarget = .init(id: presentation.id)
     }
