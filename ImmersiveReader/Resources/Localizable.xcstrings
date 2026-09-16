@@ -2,7 +2,6 @@
   "sourceLanguage": "zh-Hans",
   "strings": {
     "\n另有 %lld 个文档未能导入。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "variations": {
@@ -36,30 +35,7 @@
         }
       }
     },
-    "%@": {},
-    "%@ / %@ · %@": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$@ / %2$@ · %3$@"
-          }
-        }
-      }
-    },
-    "%@ pt": {},
-    "%@ 点 · 行距 %@ · 页边距 %@ 点": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$@ 点 · 行距 %2$@ · 页边距 %3$@ 点"
-          }
-        }
-      }
-    },
     "%@%@，%@，%@，%@": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -87,7 +63,6 @@
       }
     },
     "%@导入": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -98,7 +73,6 @@
       }
     },
     "%@读过": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -108,8 +82,34 @@
         }
       }
     },
+    "%lld": {},
+    "%lld / %lld · %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld / %2$lld · %3$@"
+          }
+        }
+      }
+    },
+    "%lld pt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld pt"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 点"
+          }
+        }
+      }
+    },
     "%lld 点": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -126,7 +126,6 @@
       }
     },
     "%lld 点 · 行距 %@ · 页边距 %lld 点": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -154,7 +153,6 @@
       }
     },
     "DOCX 内容损坏，或包含当前转换器无法处理的结构。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -171,7 +169,6 @@
       }
     },
     "DOCX 尚未转换": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -188,7 +185,6 @@
       }
     },
     "DOCX 正文无法完成安全清洗。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -205,7 +201,6 @@
       }
     },
     "DOCX 没有可显示的正文。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -222,7 +217,6 @@
       }
     },
     "DOCX 超过 %lld MB 的设备端转换限制。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -239,7 +233,6 @@
       }
     },
     "DOCX 转换器返回了无法识别的结果。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -256,7 +249,6 @@
       }
     },
     "EPUB 文件地址无效。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -273,7 +265,6 @@
       }
     },
     "EPUB 没有可阅读的正文内容。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -290,7 +281,6 @@
       }
     },
     "EPUB 阅读会话尚未准备完成。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -307,7 +297,6 @@
       }
     },
     "EPUB 阅读器未准备好": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -324,7 +313,6 @@
       }
     },
     "EPUB 阅读器未就绪": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -341,7 +329,6 @@
       }
     },
     "EPUB 阅读错误": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -374,7 +361,6 @@
       }
     },
     "PDF 已损坏或没有可读取的页面。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -425,7 +411,6 @@
       }
     },
     "PDF 正文超过 %lld MB 的文字重排限制，可以查看原版式。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -442,7 +427,6 @@
       }
     },
     "PDF 正文超过 %lld 段，暂不支持文字重排。可以查看原版式。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -476,7 +460,6 @@
       }
     },
     "PDF 的颜色片段超过 %lld 处，暂不支持文字重排。可以查看原版式。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -493,7 +476,6 @@
       }
     },
     "PDF 超过 %lld MB 的文字重排限制，可以查看原版式。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -510,7 +492,6 @@
       }
     },
     "PDF 超过 %lld 页，暂不支持文字重排。可以查看原版式。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -544,7 +525,6 @@
       }
     },
     "不支持导入符号链接。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -561,7 +541,6 @@
       }
     },
     "为保护本地文件安全，不能通过符号链接读取 DOCX。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -578,7 +557,6 @@
       }
     },
     "主题": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -595,7 +573,6 @@
       }
     },
     "书名": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -606,6 +583,7 @@
       }
     },
     "书名和作者同时用于书架显示和文字封面。": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -626,7 +604,6 @@
       }
     },
     "书库中已经存在内容相同的文件。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -643,7 +620,6 @@
       }
     },
     "书库维护未完成": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -660,7 +636,6 @@
       }
     },
     "书架": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -677,7 +652,6 @@
       }
     },
     "书架记录已删除，但本地缓存暂时未能清理。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -694,7 +668,6 @@
       }
     },
     "书架选项": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -705,7 +678,6 @@
       }
     },
     "书签": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -732,7 +704,6 @@
       }
     },
     "书籍原文件已丢失。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -749,7 +720,6 @@
       }
     },
     "书籍存储路径不安全。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -766,7 +736,6 @@
       }
     },
     "书籍已移除": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -817,7 +786,6 @@
       }
     },
     "从文件选择": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -828,7 +796,6 @@
       }
     },
     "从照片选择": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -839,7 +806,6 @@
       }
     },
     "作者": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -867,7 +833,6 @@
       }
     },
     "保存文件失败：%@": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -918,7 +883,6 @@
       }
     },
     "全部图书": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -929,7 +893,6 @@
       }
     },
     "减小字号": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -946,7 +909,6 @@
       }
     },
     "分页": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -974,7 +936,6 @@
       }
     },
     "切换到正文阅读并调整字号": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -991,7 +952,6 @@
       }
     },
     "列表视图": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1019,7 +979,6 @@
       }
     },
     "刚刚导入": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1030,7 +989,6 @@
       }
     },
     "刚刚读过": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1041,7 +999,6 @@
       }
     },
     "删除": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1058,7 +1015,6 @@
       }
     },
     "午夜蓝": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1069,7 +1025,6 @@
       }
     },
     "压缩包包含不安全路径：%@": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1086,7 +1041,6 @@
       }
     },
     "压缩包包含不支持的符号链接：%@": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1103,7 +1057,6 @@
       }
     },
     "压缩包包含过多文件（上限为 %lld 个）。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1120,7 +1073,6 @@
       }
     },
     "压缩包包含重复路径：%@": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1137,7 +1089,6 @@
       }
     },
     "压缩文档不安全：%@": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1154,7 +1105,6 @@
       }
     },
     "压缩条目膨胀比例异常：%@": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1171,7 +1121,6 @@
       }
     },
     "原版式": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1215,7 +1164,6 @@
       }
     },
     "只能导入本地文件。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1232,7 +1180,6 @@
       }
     },
     "增大字号": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1265,7 +1212,6 @@
       }
     },
     "字体": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1314,7 +1260,6 @@
       }
     },
     "完成": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1348,7 +1293,6 @@
       }
     },
     "导入失败": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1365,7 +1309,6 @@
       }
     },
     "导入层需要先将 DOCX 清洗并转换为内部 EPUB，再把转换后的文件交给阅读器。原始 DOCX 会继续保留。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1382,7 +1325,6 @@
       }
     },
     "导入文档": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1426,7 +1368,6 @@
       }
     },
     "导航": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1464,7 +1405,6 @@
       }
     },
     "封面视图": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1475,7 +1415,6 @@
       }
     },
     "尚未开始": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1492,7 +1431,6 @@
       }
     },
     "已读 %@": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1509,7 +1447,6 @@
       }
     },
     "已读完": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1520,7 +1457,6 @@
       }
     },
     "应用内置的 DOCX 转换组件不可用，请重新安装或更新应用。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1537,7 +1473,6 @@
       }
     },
     "当前字号 %lld 点": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1554,7 +1489,6 @@
       }
     },
     "当前阅读器无法打开这个文档。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1571,7 +1505,6 @@
       }
     },
     "当前页面无法容纳正文，请尝试滚动阅读或减小字号。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1588,7 +1521,6 @@
       }
     },
     "恢复默认排版": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1605,7 +1537,6 @@
       }
     },
     "所选文件不是可阅读的 EPUB 出版物。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1622,7 +1553,6 @@
       }
     },
     "所选项目不是普通文件。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1639,7 +1569,6 @@
       }
     },
     "找不到这本书": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1666,7 +1595,6 @@
       }
     },
     "排序方式": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1677,7 +1605,6 @@
       }
     },
     "排版": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1704,7 +1631,6 @@
       }
     },
     "搜索正文": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1721,7 +1647,6 @@
       }
     },
     "搜索结果": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1731,9 +1656,23 @@
         }
       }
     },
-    "文": {},
+    "文": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文"
+          }
+        }
+      }
+    },
     "文件不是有效的 EPUB，或其封装格式不受支持。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1750,7 +1689,6 @@
       }
     },
     "文件不是有效的 PDF，或没有可显示页面。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1767,7 +1705,6 @@
       }
     },
     "文件不是结构完整的 .%@ 文档。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1784,7 +1721,6 @@
       }
     },
     "文件内容与 .%@ 扩展名不匹配。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1801,7 +1737,6 @@
       }
     },
     "文件内容为空。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1818,7 +1753,6 @@
       }
     },
     "文件内封面": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1829,7 +1763,6 @@
       }
     },
     "文件地址类型不受支持。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1846,7 +1779,6 @@
       }
     },
     "文件大小为 %lld 字节，超过 %lld 字节的导入上限。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1863,7 +1795,6 @@
       }
     },
     "文字封面": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1884,7 +1815,6 @@
       }
     },
     "文本不是有效的 UTF-8，或没有使用 BOM 标记 UTF-16 编码。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1901,7 +1831,6 @@
       }
     },
     "文本文件超过 %lld MB 的大小限制。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1918,7 +1847,6 @@
       }
     },
     "文档没有可显示的正文。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1935,7 +1863,6 @@
       }
     },
     "无法为导入文件分配唯一标识。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1952,7 +1879,6 @@
       }
     },
     "无法保存书签": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1969,7 +1895,6 @@
       }
     },
     "无法保存阅读进度": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1986,7 +1911,6 @@
       }
     },
     "无法创建 EPUB 阅读界面。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2003,7 +1927,6 @@
       }
     },
     "无法删除": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2020,7 +1943,6 @@
       }
     },
     "无法完成排版": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2037,7 +1959,6 @@
       }
     },
     "无法将 %@ 按 PDF 提取正文。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2054,7 +1975,6 @@
       }
     },
     "无法打开 PDF": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2071,7 +1991,6 @@
       }
     },
     "无法打开文档": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2088,7 +2007,6 @@
       }
     },
     "无法搜索": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2105,7 +2023,6 @@
       }
     },
     "无法解析 EPUB 内容。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2122,7 +2039,6 @@
       }
     },
     "无法访问所选文件。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2139,7 +2055,6 @@
       }
     },
     "无法识别文本编码；当前支持 UTF-8 和 UTF-16。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2156,7 +2071,6 @@
       }
     },
     "无法识别没有扩展名的文件。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2173,7 +2087,6 @@
       }
     },
     "无法读取 DOCX 文件，请确认文件仍然存在。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2190,7 +2103,6 @@
       }
     },
     "无法读取 EPUB 文件。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2207,7 +2119,6 @@
       }
     },
     "无法读取 PDF 第 %lld 页，未继续生成不完整正文。可以尝试查看原版式。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2224,7 +2135,6 @@
       }
     },
     "无法读取这个图片文件，请换一个。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2235,7 +2145,6 @@
       }
     },
     "无法读取这张照片，请换一张。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2246,7 +2155,6 @@
       }
     },
     "无法选择文档": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2263,7 +2171,6 @@
       }
     },
     "无衬线": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2297,7 +2204,6 @@
       }
     },
     "显示方式": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2308,7 +2214,6 @@
       }
     },
     "暂不支持 .%@ 文件。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2325,7 +2230,6 @@
       }
     },
     "暂不支持将 %@ 作为 DOCX 读取。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2342,7 +2246,6 @@
       }
     },
     "暂不支持将 %@ 作为纯文本读取。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2359,7 +2262,6 @@
       }
     },
     "暂不支持旧版 DOC 阅读": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2376,7 +2278,6 @@
       }
     },
     "暂不支持此文档": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2393,7 +2294,6 @@
       }
     },
     "暂时无法读取 PDF，请确认文件仍然存在且可以访问。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2410,7 +2310,6 @@
       }
     },
     "暂时无法重排这份 PDF": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2427,7 +2326,6 @@
       }
     },
     "暖沙黄": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2449,7 +2347,6 @@
       }
     },
     "最近导入": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2460,7 +2357,6 @@
       }
     },
     "最近阅读": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2471,7 +2367,6 @@
       }
     },
     "未命名文档": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2504,7 +2399,6 @@
       }
     },
     "本节第 %lld 页，共 %lld 页，全文进度 %@": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2521,7 +2415,6 @@
       }
     },
     "松林绿": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2532,7 +2425,6 @@
       }
     },
     "查看原版": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2549,7 +2441,6 @@
       }
     },
     "梅子紫": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2560,7 +2451,6 @@
       }
     },
     "正在准备文档…": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2577,7 +2467,6 @@
       }
     },
     "正在准备正文…": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2610,7 +2499,6 @@
       }
     },
     "正在打开 EPUB…": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2627,7 +2515,6 @@
       }
     },
     "正在打开 PDF…": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2644,7 +2531,6 @@
       }
     },
     "正在打开…": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2661,7 +2547,6 @@
       }
     },
     "正在排版…": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2678,7 +2563,6 @@
       }
     },
     "正在提取 PDF 文字…": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2695,7 +2579,6 @@
       }
     },
     "正在搜索…": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2712,7 +2595,6 @@
       }
     },
     "正文": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2729,7 +2611,6 @@
       }
     },
     "正文阅读": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2762,7 +2643,6 @@
       }
     },
     "此 EPUB 受 DRM 保护，当前阅读器仅支持无 DRM 的书籍。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2779,7 +2659,6 @@
       }
     },
     "此出版物不允许复制所选内容。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2813,7 +2692,6 @@
       }
     },
     "没有书签": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2830,7 +2708,6 @@
       }
     },
     "没有匹配结果": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2847,7 +2724,6 @@
       }
     },
     "没有找到": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2858,7 +2734,6 @@
       }
     },
     "没有正文": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2875,7 +2750,6 @@
       }
     },
     "没有目录": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2892,7 +2766,6 @@
       }
     },
     "浅色": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2909,7 +2782,6 @@
       }
     },
     "深海青": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2920,7 +2792,6 @@
       }
     },
     "深色": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2937,7 +2808,6 @@
       }
     },
     "添加书签": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2954,7 +2824,6 @@
       }
     },
     "滚动": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2971,7 +2840,6 @@
       }
     },
     "玫瑰红": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2999,7 +2867,6 @@
       }
     },
     "目录": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3016,7 +2883,6 @@
       }
     },
     "看原版": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3033,7 +2899,6 @@
       }
     },
     "石墨灰": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3061,7 +2926,6 @@
       }
     },
     "移除书签": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3078,7 +2942,6 @@
       }
     },
     "移除图片后，书架会显示按书名排版的文字封面。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3089,7 +2952,6 @@
       }
     },
     "移除封面图片": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3116,7 +2978,6 @@
       }
     },
     "第 %lld 节": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3133,7 +2994,6 @@
       }
     },
     "第 %lld 页": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3150,7 +3010,6 @@
       }
     },
     "第 %lld 项，共 %lld 项": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3167,7 +3026,6 @@
       }
     },
     "等 %lld 页": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "variations": {
@@ -3202,7 +3060,6 @@
       }
     },
     "等宽": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3219,7 +3076,6 @@
       }
     },
     "米色": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3236,7 +3092,6 @@
       }
     },
     "系统": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3263,7 +3118,6 @@
       }
     },
     "继续阅读 %@": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3274,7 +3128,6 @@
       }
     },
     "自定义封面": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3285,7 +3138,6 @@
       }
     },
     "行距": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3302,7 +3154,6 @@
       }
     },
     "衬线": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3331,6 +3182,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "解压后的内容超过 %lld 字节上限。"
+          }
+        }
+      }
+    },
+    "解压后的内容超过 %llu 字节上限。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The uncompressed content exceeds the %llu-byte limit."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解压后的内容超过 %llu 字节上限。"
           }
         }
       }
@@ -3370,7 +3237,6 @@
       }
     },
     "请先在 Word 或 Pages 中另存为 DOCX 或 PDF 后重新导入。首版不会在设备上解析旧的二进制 DOC 格式。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3387,7 +3253,6 @@
       }
     },
     "读取 EPUB 内容时发生错误。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3421,7 +3286,6 @@
       }
     },
     "跟随系统": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3438,7 +3302,6 @@
       }
     },
     "转换后的正文超过 %lld MB 的显示限制。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3472,7 +3335,6 @@
       }
     },
     "轻点开始阅读。长按可更换封面或删除。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3483,7 +3345,6 @@
       }
     },
     "还没有书": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3500,7 +3361,6 @@
       }
     },
     "这份 PDF 不允许复制正文，无法进行文字重排。可以查看原版式。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3517,7 +3377,6 @@
       }
     },
     "这份 PDF 没有可提取的文字": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3534,7 +3393,6 @@
       }
     },
     "这份 PDF 没有可提取的正文，可能是扫描件或图片。当前尚未提供 OCR，请查看原版式。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3551,7 +3409,6 @@
       }
     },
     "这份 PDF 需要密码，目前无法提取正文。可以尝试查看原版式。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3568,7 +3425,6 @@
       }
     },
     "这张图片无法用作封面，请换一张。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3579,7 +3435,6 @@
       }
     },
     "这种格式不携带封面图片，可以自己选一张，或使用文字封面。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3590,7 +3445,6 @@
       }
     },
     "选择的项目不是可读取的 PDF 文件。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3607,7 +3461,6 @@
       }
     },
     "选择的项目不是可读取的文件。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3624,7 +3477,6 @@
       }
     },
     "部分文档未能导入": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3641,7 +3493,6 @@
       }
     },
     "部分无效缓存暂时无法清理，不影响继续阅读。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3668,7 +3519,6 @@
       }
     },
     "重新提取": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3685,7 +3535,6 @@
       }
     },
     "重新识别文件内封面": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3696,7 +3545,6 @@
       }
     },
     "重试": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3730,7 +3578,6 @@
       }
     },
     "阅读主题": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3747,7 +3594,6 @@
       }
     },
     "阅读位置 %lld": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3764,7 +3610,6 @@
       }
     },
     "阅读方式": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3798,7 +3643,6 @@
       }
     },
     "阅读设置": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3815,7 +3659,6 @@
       }
     },
     "阅读进度": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3842,7 +3685,6 @@
       }
     },
     "陶土橙": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3853,7 +3695,6 @@
       }
     },
     "页": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3870,7 +3711,6 @@
       }
     },
     "页边距": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3887,7 +3727,6 @@
       }
     },
     "首版暂不支持需要密码的 PDF。": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3904,7 +3743,6 @@
       }
     },
     "首页生成": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {

@@ -84,7 +84,7 @@ struct ReaderSettingsView: View {
 
                         sliderRow(
                             title: String(localized: "页边距"),
-                            value: "\(Int(settings.margin)) 点",
+                            value: String(localized: "\(Int(settings.margin)) 点"),
                             binding: $settings.margin,
                             range: ReaderDisplaySettings.marginRange,
                             step: 4,
