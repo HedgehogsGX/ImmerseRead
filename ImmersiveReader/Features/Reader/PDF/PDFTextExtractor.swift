@@ -6,6 +6,33 @@ struct PDFReflowContent: Hashable, Codable, Sendable {
     let pageCount: Int
     /// One-based source page numbers. Callers must disclose these omissions.
     let pagesWithoutText: [Int]
+    /// Index of the first reflowed block taken from each zero-based source page.
+    /// A page that contributed no text shares the index of the next page that
+    /// did, so navigating to it lands on the text that follows it.
+    let pageStartBlockIndices: [Int]
+
+    init(
+        textContent: ReaderTextContent,
+        pageCount: Int,
+        pagesWithoutText: [Int],
+        pageStartBlockIndices: [Int] = []
+    ) {
+        self.textContent = textContent
+        self.pageCount = pageCount
+        self.pagesWithoutText = pagesWithoutText
+        self.pageStartBlockIndices = pageStartBlockIndices
+    }
+
+    /// Where a source page begins in the reflowed text, so the contents list can
+    /// move within the text instead of sending the reader to the original layout.
+    /// `nil` when this content carries no page mapping at all.
+    func blockIndex(forPage pageIndex: Int) -> Int? {
+        guard pageStartBlockIndices.indices.contains(pageIndex),
+              !textContent.blocks.isEmpty else {
+            return nil
+        }
+        return min(pageStartBlockIndices[pageIndex], textContent.blocks.count - 1)
+    }
 }
 
 protocol PDFTextExtracting: Sendable {
@@ -16,7 +43,7 @@ protocol PDFTextExtracting: Sendable {
 struct PDFTextExtractor: PDFTextExtracting {
     /// Identifies the extraction output format for on-disk caches. Bump it whenever
     /// the extractor or normalizer would produce different blocks for the same file.
-    static let extractionVersion = 1
+    static let extractionVersion = 2
 
     static let defaultMaximumFileSize = DocumentFileLimits.pdfMaximumBytes
     /// Raw extracted text budget. Sized so the paragraph cap below is what a
@@ -104,12 +131,15 @@ struct PDFTextExtractor: PDFTextExtracting {
 
         var blocks: [ReaderSemanticBlock] = []
         var pagesWithoutText: [Int] = []
+        var pageStartBlockIndices: [Int] = []
+        pageStartBlockIndices.reserveCapacity(pageCount)
         var extractedUTF8Bytes = 0
         var extractedStyleRunCount = 0
 
         for pageIndex in 0 ..< pageCount {
             try Task.checkCancellation()
             let previousBlockCount = blocks.count
+            pageStartBlockIndices.append(previousBlockCount)
             try autoreleasepool {
                 guard let page = pdfDocument.page(at: pageIndex) else {
                     throw PDFTextExtractionError.invalidPage(pageNumber: pageIndex + 1)
@@ -167,7 +197,8 @@ struct PDFTextExtractor: PDFTextExtracting {
         return PDFReflowContent(
             textContent: ReaderTextContent(format: .pdf, blocks: blocks),
             pageCount: pageCount,
-            pagesWithoutText: pagesWithoutText
+            pagesWithoutText: pagesWithoutText,
+            pageStartBlockIndices: pageStartBlockIndices
         )
     }
 

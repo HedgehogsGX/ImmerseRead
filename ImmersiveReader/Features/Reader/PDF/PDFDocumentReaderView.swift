@@ -1,3 +1,4 @@
+import Combine
 import PDFKit
 import SwiftUI
 
@@ -11,6 +12,12 @@ struct PDFDocumentReaderView: View {
     @State private var phase: ExtractionPhase = .idle
     @State private var retryID = UUID()
     @State private var extractedDocumentID: UUID?
+    /// Kept alongside the extracted text so a contents jump can turn a block
+    /// into reading progress without measuring every block again.
+    @State private var reflowSegmentation: ReaderTextSegmentation?
+    /// A published request is redelivered to every new subscription, which each
+    /// redraw creates. Answer each jump once.
+    @State private var handledJumpID: UUID?
 
     init(
         document: ReaderDocument,
@@ -50,8 +57,10 @@ struct PDFDocumentReaderView: View {
         .task(id: document.id) {
             installSearchProvider()
         }
-        .onChange(of: navigationModel?.jumpRequest?.id) { _, _ in
-            applyNavigationJump()
+        // Subscribed rather than observed: this view holds the navigation model
+        // plainly, so a jump must not wait for some other change to redraw it.
+        .onReceive(navigationModel?.$jumpRequest.eraseToAnyPublisher() ?? Empty().eraseToAnyPublisher()) { request in
+            applyNavigationJump(request)
         }
     }
 
@@ -146,6 +155,7 @@ struct PDFDocumentReaderView: View {
         if extractedDocumentID != document.id {
             extractedDocumentID = document.id
             phase = .idle
+            reflowSegmentation = nil
         }
         if case .ready = phase {
             return
@@ -156,7 +166,10 @@ struct PDFDocumentReaderView: View {
             let content = try await extractor.extract(document: document)
             try Task.checkCancellation()
             phase = .ready(content)
+            reflowSegmentation = ReaderTextSegmentation(blocks: content.textContent.blocks)
             navigationModel?.update(content: content.textContent)
+            // A page jump that arrived mid-extraction waited for this text.
+            applyNavigationJump(navigationModel?.jumpRequest)
         } catch is CancellationError {
             return
         } catch {
@@ -172,6 +185,8 @@ struct PDFDocumentReaderView: View {
                 title = String(localized: "暂时无法重排这份 PDF")
             }
             phase = .failed(ExtractionFailure(title: title, message: error.localizedDescription))
+            // A page jump waiting on this text now has to settle for the original.
+            applyNavigationJump(navigationModel?.jumpRequest)
         }
     }
 
@@ -200,19 +215,64 @@ struct PDFDocumentReaderView: View {
     }
 
     @MainActor
-    private func applyNavigationJump() {
-        guard let request = navigationModel?.jumpRequest else { return }
+    private func applyNavigationJump(_ request: ReaderNavigationJump?) {
+        guard let request, request.id != handledJumpID else { return }
         switch request.location {
         case .text(let textLocation):
+            handledJumpID = request.id
             location.mode = .reflow
             location.updateReflowLocation(textLocation)
         case .pdf(let pdfLocation):
+            handledJumpID = request.id
             location = pdfLocation
-        case .pdfPage:
-            location.mode = .original
+        case .pdfPage(let pageIndex):
+            // Contents entries and PDF search hits address a source page. While
+            // reading the reflowed text, move to where that page begins in the
+            // text: consulting the contents must never swap the reading surface
+            // out from under the reader.
+            guard location.mode == .reflow else {
+                handledJumpID = request.id
+                location.mode = .original
+                return
+            }
+            // Text still being extracted leaves the request pending, to be
+            // answered when the text arrives rather than with original pages.
+            guard !isExtractingText else { return }
+            handledJumpID = request.id
+            guard let textLocation = reflowLocation(forSourcePage: pageIndex) else {
+                // No reflowed text to move to: the original pages are the answer.
+                location.mode = .original
+                return
+            }
+            location.updateReflowLocation(textLocation)
+            // Hand the reflow surface a jump it understands, on the next turn:
+            // the page request it replaces may still be publishing.
+            let model = navigationModel
+            Task { @MainActor in
+                await Task.yield()
+                model?.requestJump(to: .text(textLocation))
+            }
         case .epub:
             return
         }
+    }
+
+    private var isExtractingText: Bool {
+        switch phase {
+        case .idle, .loading: true
+        case .ready, .failed: false
+        }
+    }
+
+    @MainActor
+    private func reflowLocation(forSourcePage pageIndex: Int) -> TextReadingLocation? {
+        guard case .ready(let content) = phase,
+              let segmentation = reflowSegmentation,
+              let blockIndex = content.blockIndex(forPage: pageIndex) else {
+            return nil
+        }
+        let anchor = ReaderTextAnchor(blockIndex: blockIndex, offsetInBlock: 0)
+        return TextReadingLocation(anchor: anchor, progress: segmentation.progress(for: anchor))
     }
 }
 

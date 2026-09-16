@@ -21,12 +21,8 @@ struct ReaderTextLayoutViewTests {
 
         let state = HarnessState(settings: ReaderDisplaySettings(layoutMode: .scrolling, fontSize: 18))
         let host = UIHostingController(rootView: Harness(content: content, state: state))
-        let (window, previousKeyWindow) = makeWindow(for: host)
-        defer {
-            window.isHidden = true
-            window.rootViewController = nil
-            previousKeyWindow?.makeKey()
-        }
+        let screen = await ReaderTestScreen.show(host)
+        defer { screen.dismiss() }
 
         try await waitUntil { self.firstSubview(of: UITextView.self, in: host.view)?.textStorage.length ?? 0 > 0 }
         let textView = try #require(firstSubview(of: UITextView.self, in: host.view))
@@ -57,12 +53,8 @@ struct ReaderTextLayoutViewTests {
         let saved = TextReadingLocation(anchor: ReaderTextAnchor(blockIndex: targetBlock, offsetInBlock: 12), progress: 0)
         let state = HarnessState(settings: ReaderDisplaySettings(layoutMode: .paged, fontSize: 18))
         let host = UIHostingController(rootView: Harness(content: content, state: state, initialLocation: saved))
-        let (window, previousKeyWindow) = makeWindow(for: host)
-        defer {
-            window.isHidden = true
-            window.rootViewController = nil
-            previousKeyWindow?.makeKey()
-        }
+        let screen = await ReaderTestScreen.show(host)
+        defer { screen.dismiss() }
 
         try await waitUntil { self.pageController(in: host) != nil }
         let pageController = try #require(self.pageController(in: host))
@@ -107,12 +99,8 @@ struct ReaderTextLayoutViewTests {
         let state = HarnessState(settings: ReaderDisplaySettings(layoutMode: .paged, fontSize: 18))
         let saved = TextReadingLocation(anchor: ReaderTextAnchor(blockIndex: 80, offsetInBlock: 5), progress: 0)
         let host = UIHostingController(rootView: Harness(content: content, state: state, initialLocation: saved))
-        let (window, previousKeyWindow) = makeWindow(for: host)
-        defer {
-            window.isHidden = true
-            window.rootViewController = nil
-            previousKeyWindow?.makeKey()
-        }
+        let screen = await ReaderTestScreen.show(host)
+        defer { screen.dismiss() }
 
         try await waitUntil { state.location != nil }
         let pagedAnchor = try #require(state.location?.anchor)
@@ -132,12 +120,8 @@ struct ReaderTextLayoutViewTests {
             id: UUID(), title: "Navigation", fileURL: URL(fileURLWithPath: "/tmp/navigation.txt"), format: .plainText
         ))
         let host = UIHostingController(rootView: Harness(content: content, state: state, navigationModel: model))
-        let (window, previousKeyWindow) = makeWindow(for: host)
-        defer {
-            window.isHidden = true
-            window.rootViewController = nil
-            previousKeyWindow?.makeKey()
-        }
+        let screen = await ReaderTestScreen.show(host)
+        defer { screen.dismiss() }
         try await waitUntil { state.location != nil }
         let target = ReaderTextAnchor(blockIndex: 110, offsetInBlock: 50)
         model.requestJump(to: .text(TextReadingLocation(anchor: target, progress: 0)))
@@ -156,12 +140,8 @@ struct ReaderTextLayoutViewTests {
         let segmentation = ReaderTextSegmentation(blocks: largeContent.blocks)
         let state = HarnessState(settings: ReaderDisplaySettings(layoutMode: .scrolling, fontSize: 18))
         let host = UIHostingController(rootView: Harness(content: largeContent, state: state))
-        let (window, previousKeyWindow) = makeWindow(for: host)
-        defer {
-            window.isHidden = true
-            window.rootViewController = nil
-            previousKeyWindow?.makeKey()
-        }
+        let screen = await ReaderTestScreen.show(host)
+        defer { screen.dismiss() }
         try await waitUntil { state.location != nil }
         let textView = try #require(firstSubview(of: UITextView.self, in: host.view))
         for index in 0..<6 {
@@ -194,21 +174,6 @@ struct ReaderTextLayoutViewTests {
             return nil
         }
         return search(host)
-    }
-
-    private func makeWindow(for controller: UIViewController) -> (UIWindow, UIWindow?) {
-        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        let previousKeyWindow = scenes.flatMap(\.windows).first(where: \.isKeyWindow)
-        let window: UIWindow
-        if let scene = scenes.first {
-            window = UIWindow(windowScene: scene)
-        } else {
-            window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
-        }
-        window.frame = CGRect(x: 0, y: 0, width: 390, height: 844)
-        window.rootViewController = controller
-        window.makeKeyAndVisible()
-        return (window, previousKeyWindow)
     }
 
     private func fontSize(in view: UIView) -> CGFloat? {

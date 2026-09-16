@@ -34,12 +34,8 @@ struct PDFReflowViewTests {
             state: state,
             extractor: extractor
         ))
-        let (window, previousKeyWindow) = makeWindow(for: host)
-        defer {
-            window.isHidden = true
-            window.rootViewController = nil
-            previousKeyWindow?.makeKey()
-        }
+        let screen = await ReaderTestScreen.show(host)
+        defer { screen.dismiss() }
 
         try await waitUntil {
             self.fontSize(in: host.view) == 19
@@ -96,12 +92,8 @@ struct PDFReflowViewTests {
         let host = UIHostingController(rootView: PDFReflowHarness(
             document: document, state: state, extractor: extractor
         ))
-        let (window, previousKeyWindow) = makeWindow(for: host)
-        defer {
-            window.isHidden = true
-            window.rootViewController = nil
-            previousKeyWindow?.makeKey()
-        }
+        let screen = await ReaderTestScreen.show(host)
+        defer { screen.dismiss() }
 
         try await waitUntil { self.fontSize(in: host.view) == 19 }
         let textView = try #require(firstSubview(of: UITextView.self, in: host.view))
@@ -149,25 +141,10 @@ struct PDFReflowViewTests {
         let reopenedHost = UIHostingController(rootView: PDFReflowHarness(
             document: document, state: reopenedState, extractor: extractor
         ))
-        window.rootViewController = reopenedHost
+        screen.present(reopenedHost)
         try await waitUntil { self.fontSize(in: reopenedHost.view) == 26 }
         let reopenedTextView = try #require(firstSubview(of: UITextView.self, in: reopenedHost.view))
         #expect(abs(visibleCharacterOffset(in: reopenedTextView) - anchor) < 120)
-    }
-
-    private func makeWindow(for controller: UIViewController) -> (UIWindow, UIWindow?) {
-        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        let previousKeyWindow = scenes.flatMap(\.windows).first(where: \.isKeyWindow)
-        let window: UIWindow
-        if let scene = scenes.first {
-            window = UIWindow(windowScene: scene)
-        } else {
-            window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
-        }
-        window.frame = CGRect(x: 0, y: 0, width: 390, height: 844)
-        window.rootViewController = controller
-        window.makeKeyAndVisible()
-        return (window, previousKeyWindow)
     }
 
     private func visibleCharacterOffset(in textView: UITextView) -> Int {

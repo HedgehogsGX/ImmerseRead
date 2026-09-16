@@ -15,6 +15,10 @@ actor ReaderContentCache {
         var filename: String {
             "\(kind).v\(version).json"
         }
+
+        fileprivate var filenamePrefix: String {
+            "\(kind).v"
+        }
     }
 
     private let directoryForDocument: @Sendable (ReaderDocument) -> URL
@@ -59,7 +63,8 @@ actor ReaderContentCache {
             return
         }
 
-        var cacheURL = directoryForDocument(document).appendingPathComponent(key.filename)
+        let directory = directoryForDocument(document)
+        var cacheURL = directory.appendingPathComponent(key.filename)
         do {
             try data.write(to: cacheURL, options: .atomic)
             var values = URLResourceValues()
@@ -67,6 +72,26 @@ actor ReaderContentCache {
             try cacheURL.setResourceValues(values)
         } catch {
             try? fileManager.removeItem(at: cacheURL)
+            return
+        }
+        removeEntries(supersededBy: key, in: directory)
+    }
+
+    /// Raising a derivation's version makes its earlier files unreadable, and a
+    /// book's whole text can sit in one of them. Drop them once the replacement
+    /// is safely on disk.
+    private func removeEntries(supersededBy key: Key, in directory: URL) {
+        guard let entries = try? fileManager.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        ) else {
+            return
+        }
+        for entry in entries where entry.lastPathComponent != key.filename
+            && entry.lastPathComponent.hasPrefix(key.filenamePrefix)
+            && entry.pathExtension == "json" {
+            try? fileManager.removeItem(at: entry)
         }
     }
 
