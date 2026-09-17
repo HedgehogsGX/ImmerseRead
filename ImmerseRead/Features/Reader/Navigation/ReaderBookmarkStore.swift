@@ -32,7 +32,11 @@ struct ReaderBookmarkStore: Sendable {
     private static func defaultDirectory() -> URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
-        return base.appendingPathComponent("ImmerseRead/ReaderBookmarks", isDirectory: true)
+        // Named for the app as it was first installed. The bundle identifier
+        // did not change with the rename, so an update lands in the same
+        // container: renaming this folder would leave existing bookmarks
+        // behind in the old one.
+        return base.appendingPathComponent("ImmersiveReader/ReaderBookmarks", isDirectory: true)
     }
 }
 

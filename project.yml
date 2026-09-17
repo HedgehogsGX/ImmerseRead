@@ -56,7 +56,10 @@ targets:
         product: ReadiumZIPFoundation
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.wallaceguo.ImmerseRead
+        # The App Store Connect record was created under the old name and
+        # Apple locks the bundle identifier once a build has been uploaded, so
+        # this one keeps it. Nothing a reader sees is named from here.
+        PRODUCT_BUNDLE_IDENTIFIER: com.wallaceguo.ImmersiveReader
         PRODUCT_NAME: ImmerseRead
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
@@ -84,5 +87,5 @@ targets:
         product: ReadiumZIPFoundation
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.wallaceguo.ImmerseReadTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.wallaceguo.ImmersiveReaderTests
         GENERATE_INFOPLIST_FILE: YES

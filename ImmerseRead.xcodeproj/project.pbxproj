@@ -236,7 +236,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.wallaceguo.ImmerseReadTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wallaceguo.ImmersiveReaderTests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ImmerseRead.app/ImmerseRead";
@@ -378,7 +378,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.wallaceguo.ImmerseReadTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wallaceguo.ImmersiveReaderTests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ImmerseRead.app/ImmerseRead";
@@ -402,7 +402,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.wallaceguo.ImmerseRead;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wallaceguo.ImmersiveReader;
 				PRODUCT_NAME = ImmerseRead;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -426,7 +426,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.wallaceguo.ImmerseRead;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wallaceguo.ImmersiveReader;
 				PRODUCT_NAME = ImmerseRead;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
