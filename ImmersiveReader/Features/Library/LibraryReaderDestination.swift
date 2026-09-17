@@ -7,6 +7,7 @@ struct LibraryReaderDestination: View {
     let importService: BookImportService
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @State private var loadState: LoadState = .loading
     @State private var retryID = UUID()
     @State private var progressSaveTask: Task<Void, Never>?
@@ -46,14 +47,28 @@ struct LibraryReaderDestination: View {
             await loadDocument()
         }
         .onDisappear {
-            progressSaveTask?.cancel()
-            try? modelContext.save()
+            flushReadingProgress()
+        }
+        // An App Store or TestFlight update replaces a backgrounded app, which
+        // is then terminated without another chance to write. Anything the
+        // debounced save has not reached disk yet goes down with it, so the
+        // position is flushed the moment reading stops being the foreground.
+        .onChange(of: scenePhase) { _, phase in
+            guard phase != .active else {
+                return
+            }
+            flushReadingProgress()
         }
         .alert("无法保存阅读进度", isPresented: $isProgressSaveAlertPresented) {
             Button("好", role: .cancel) {}
         } message: {
             Text("本次阅读可以继续，但退出后可能无法恢复到当前位置。")
         }
+    }
+
+    private func flushReadingProgress() {
+        progressSaveTask?.cancel()
+        try? modelContext.save()
     }
 
     private func loadDocument() async {

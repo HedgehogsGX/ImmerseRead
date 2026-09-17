@@ -719,6 +719,22 @@
         }
       }
     },
+    "书籍和阅读进度仍保存在这台设备上。请重新打开 App 再试一次，不要删除 App —— 删除会连同书库一起抹掉。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your books and reading progress are still on this device. Reopen the app and try again — don’t delete it, that erases the library too."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "书籍和阅读进度仍保存在这台设备上。请重新打开 App 再试一次，不要删除 App —— 删除会连同书库一起抹掉。"
+          }
+        }
+      }
+    },
     "书籍存储路径不安全。": {
       "localizations": {
         "en": {
@@ -2289,6 +2305,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "暂不支持此文档"
+          }
+        }
+      }
+    },
+    "暂时无法打开书库": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your library can’t open right now"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂时无法打开书库"
           }
         }
       }

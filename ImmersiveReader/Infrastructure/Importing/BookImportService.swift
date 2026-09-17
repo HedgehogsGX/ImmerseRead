@@ -4,6 +4,11 @@ import Foundation
 actor BookImportService {
     static let defaultMaximumFileSize = DocumentFileLimits.generalMaximumBytes
     static let coverFilename = "cover.jpg"
+    /// How long a book folder without a record is kept before it is discarded.
+    static let orphanRetention: TimeInterval = 7 * 24 * 60 * 60
+
+    private static let stagingPrefix = ".import-"
+    private static let quarantinePrefix = ".orphaned-"
 
     private let explicitLibraryRootURL: URL?
     private let maximumFileSize: Int64
@@ -93,7 +98,10 @@ actor BookImportService {
         let bookID = try nextAvailableBookIdentifier(in: libraryRootURL)
         let storedFilename = "original.\(sourceFormat.preferredFileExtension)"
         let stagingDirectoryURL = libraryRootURL
-            .appendingPathComponent(".import-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent(
+                "\(Self.stagingPrefix)\(UUID().uuidString)",
+                isDirectory: true
+            )
         let stagedOriginalURL = stagingDirectoryURL.appendingPathComponent(storedFilename)
         let finalDirectoryURL = libraryRootURL
             .appendingPathComponent(bookID.uuidString, isDirectory: true)
@@ -304,8 +312,15 @@ actor BookImportService {
         }
     }
 
-    /// Removes only importer-owned staging folders and UUID book folders that no
-    /// longer have a SwiftData record. Unknown files are deliberately preserved.
+    /// Removes importer-owned staging folders and sets aside UUID book folders
+    /// that no longer have a SwiftData record. Unknown files are deliberately
+    /// preserved.
+    ///
+    /// Orphans are quarantined rather than deleted. A database that failed to
+    /// open, or that came back short from a migration, looks exactly like a
+    /// shelf whose books were removed on purpose, and the documents have to
+    /// outlive that mistake: a quarantined folder is claimed back the moment its
+    /// record reappears, and is discarded only after `orphanRetention`.
     func reconcileStorage(validBookIDs: Set<UUID>) throws {
         let libraryRootURL = try resolveLibraryRootURL()
         guard fileManager.fileExists(atPath: libraryRootURL.path) else {
@@ -323,31 +338,141 @@ actor BookImportService {
             throw storageFailure(from: error)
         }
 
+        let entryNames = Set(entries.map(\.lastPathComponent))
+
         for entryURL in entries {
             let name = entryURL.lastPathComponent
-            let stagingID = name.hasPrefix(".import-")
-                ? UUID(uuidString: String(name.dropFirst(".import-".count)))
-                : nil
-            let storedBookID = UUID(uuidString: name)
-            let isOrphanedBook = storedBookID.map { !validBookIDs.contains($0) } ?? false
 
-            guard stagingID != nil || isOrphanedBook else {
+            if name.hasPrefix(Self.stagingPrefix) {
+                guard UUID(uuidString: String(name.dropFirst(Self.stagingPrefix.count))) != nil else {
+                    continue
+                }
+                try removeReconciledEntry(at: entryURL)
                 continue
             }
 
-            do {
-                let values = try entryURL.resourceValues(forKeys: [
-                    .isDirectoryKey,
-                    .isSymbolicLinkKey,
-                ])
-                guard values.isSymbolicLink == true || values.isDirectory == true else {
-                    continue
-                }
+            if name.hasPrefix(Self.quarantinePrefix) {
+                try reconcileQuarantinedEntry(
+                    at: entryURL,
+                    in: libraryRootURL,
+                    validBookIDs: validBookIDs,
+                    entryNames: entryNames
+                )
+                continue
+            }
+
+            guard let storedBookID = UUID(uuidString: name),
+                  !validBookIDs.contains(storedBookID),
+                  // A shelf that reads as empty is indistinguishable from a
+                  // database that never loaded, so nothing is taken from one.
+                  !validBookIDs.isEmpty
+            else {
+                continue
+            }
+
+            try quarantineBookDirectory(
+                at: entryURL,
+                bookID: storedBookID,
+                in: libraryRootURL
+            )
+        }
+    }
+
+    private func removeReconciledEntry(at entryURL: URL) throws {
+        do {
+            let values = try entryURL.resourceValues(forKeys: [
+                .isDirectoryKey,
+                .isSymbolicLinkKey,
+            ])
+            guard values.isSymbolicLink == true || values.isDirectory == true else {
+                return
+            }
+            try fileManager.removeItem(at: entryURL)
+        } catch {
+            throw storageFailure(from: error)
+        }
+    }
+
+    private func quarantineBookDirectory(
+        at entryURL: URL,
+        bookID: UUID,
+        in libraryRootURL: URL
+    ) throws {
+        do {
+            let values = try entryURL.resourceValues(forKeys: [
+                .isDirectoryKey,
+                .isSymbolicLinkKey,
+            ])
+            // A symbolic link carries no document of its own.
+            guard values.isSymbolicLink != true else {
                 try fileManager.removeItem(at: entryURL)
+                return
+            }
+            guard values.isDirectory == true else {
+                return
+            }
+
+            let quarantineURL = libraryRootURL.appendingPathComponent(
+                Self.quarantineName(for: bookID, at: now()),
+                isDirectory: true
+            )
+            try fileManager.moveItem(at: entryURL, to: quarantineURL)
+        } catch {
+            throw storageFailure(from: error)
+        }
+    }
+
+    private func reconcileQuarantinedEntry(
+        at entryURL: URL,
+        in libraryRootURL: URL,
+        validBookIDs: Set<UUID>,
+        entryNames: Set<String>
+    ) throws {
+        guard let entry = Self.quarantinedEntry(fromName: entryURL.lastPathComponent) else {
+            return
+        }
+
+        guard !validBookIDs.contains(entry.bookID) else {
+            // The record is back, so give the book its folder again.
+            guard !entryNames.contains(entry.bookID.uuidString) else {
+                return
+            }
+            do {
+                try fileManager.moveItem(
+                    at: entryURL,
+                    to: libraryRootURL.appendingPathComponent(
+                        entry.bookID.uuidString,
+                        isDirectory: true
+                    )
+                )
             } catch {
                 throw storageFailure(from: error)
             }
+            return
         }
+
+        guard now().timeIntervalSince(entry.quarantinedAt) > Self.orphanRetention else {
+            return
+        }
+        try removeReconciledEntry(at: entryURL)
+    }
+
+    private static func quarantineName(for bookID: UUID, at date: Date) -> String {
+        "\(quarantinePrefix)\(Int(date.timeIntervalSince1970))-\(bookID.uuidString)"
+    }
+
+    private static func quarantinedEntry(
+        fromName name: String
+    ) -> (bookID: UUID, quarantinedAt: Date)? {
+        let body = name.dropFirst(quarantinePrefix.count)
+        guard let separatorIndex = body.firstIndex(of: "-"),
+              let seconds = TimeInterval(body[body.startIndex ..< separatorIndex]),
+              let bookID = UUID(uuidString: String(body[body.index(after: separatorIndex)...]))
+        else {
+            // Not a name this app writes: leave it where it is.
+            return nil
+        }
+        return (bookID, Date(timeIntervalSince1970: seconds))
     }
 
     private func resolveLibraryRootURL() throws -> URL {
