@@ -1,4 +1,4 @@
-# ImmersiveReader（沉浸阅读）
+# ImmerseRead（沉浸阅读）
 
 一个面向 iPhone 和 iPad 的本地优先电子书阅读器。文档通过系统文件选择器导入，原文件保存在应用沙盒，阅读与转换均在设备端完成。
 
@@ -60,6 +60,6 @@
 xcodegen generate
 ```
 
-打开 `ImmersiveReader.xcodeproj`，选择 `ImmersiveReader` scheme 即可构建。依赖通过 Swift Package Manager 固定版本：Readium 3.11.0、SwiftSoup 2.13.9，以及 Readium ZIPFoundation 3.0.1。
+打开 `ImmerseRead.xcodeproj`，选择 `ImmerseRead` scheme 即可构建。依赖通过 Swift Package Manager 固定版本：Readium 3.11.0、SwiftSoup 2.13.9，以及 Readium ZIPFoundation 3.0.1。
 
-内置的 Mammoth 浏览器构建及其许可证位于 `ImmersiveReader/Resources/Vendor/Mammoth/`。
+内置的 Mammoth 浏览器构建及其许可证位于 `ImmerseRead/Resources/Vendor/Mammoth/`。

@@ -1,4 +1,4 @@
-name: ImmersiveReader
+name: ImmerseRead
 
 options:
   bundleIdPrefix: com.wallaceguo
@@ -39,11 +39,11 @@ packages:
     exactVersion: 3.0.1
 
 targets:
-  ImmersiveReader:
+  ImmerseRead:
     type: application
     platform: iOS
     sources:
-      - path: ImmersiveReader
+      - path: ImmerseRead
     dependencies:
       - package: Readium
         product: ReadiumShared
@@ -56,11 +56,11 @@ targets:
         product: ReadiumZIPFoundation
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.wallaceguo.ImmersiveReader
-        PRODUCT_NAME: ImmersiveReader
+        PRODUCT_BUNDLE_IDENTIFIER: com.wallaceguo.ImmerseRead
+        PRODUCT_NAME: ImmerseRead
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
-        INFOPLIST_KEY_CFBundleDisplayName: Immersive Reader
+        INFOPLIST_KEY_CFBundleDisplayName: ImmerseRead
         INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
@@ -70,19 +70,19 @@ targets:
         TARGETED_DEVICE_FAMILY: "1,2"
     scheme:
       testTargets:
-        - ImmersiveReaderTests
+        - ImmerseReadTests
       gatherCoverageData: true
 
-  ImmersiveReaderTests:
+  ImmerseReadTests:
     type: bundle.unit-test
     platform: iOS
     sources:
-      - path: ImmersiveReaderTests
+      - path: ImmerseReadTests
     dependencies:
-      - target: ImmersiveReader
+      - target: ImmerseRead
       - package: ZIPFoundation
         product: ReadiumZIPFoundation
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.wallaceguo.ImmersiveReaderTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.wallaceguo.ImmerseReadTests
         GENERATE_INFOPLIST_FILE: YES
