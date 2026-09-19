@@ -1,4 +1,4 @@
-# ImmersiveReader
+# ImmerseRead
 
 A local-first ebook reader for iPhone and iPad.
 
@@ -59,9 +59,9 @@ The project is generated with [XcodeGen](https://github.com/yonaskolb/XcodeGen):
 xcodegen generate
 ```
 
-Open `ImmersiveReader.xcodeproj` and build the `ImmersiveReader` scheme.
+Open `ImmerseRead.xcodeproj` and build the `ImmerseRead` scheme.
 Dependencies are pinned through Swift Package Manager: Readium 3.11.0,
 SwiftSoup 2.13.9, Readium ZIPFoundation 3.0.1. The bundled Mammoth build and its
-licence are in `ImmersiveReader/Resources/Vendor/Mammoth/`.
+licence are in `ImmerseRead/Resources/Vendor/Mammoth/`.
 
 Requires iOS 17 or later.
